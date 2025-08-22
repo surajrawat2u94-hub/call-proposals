@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Call Proposals Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <style>
+    #appError{display:none;position:fixed;inset:0;background:#111827cc;color:#fff;z-index:9999;padding:16px;overflow:auto}
+    #appError pre{white-space:pre-wrap;word-break:break-word}
+    th.resizable{position:relative}
+    .col-resizer{position:absolute;right:-3px;top:0;width:12px;height:100%;cursor:col-resize;user-select:none;background:transparent}
+    .col-resizer:hover{background:rgba(59,130,246,.15)}
+    .sticky-head thead th{position:sticky;top:0;background:#f8fafc;z-index:1}
+    .sort-ind{margin-left:.35rem;font-size:.9em;opacity:.7}
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <div id="appError">
+    <h2 class="text-xl font-semibold">Something went wrong</h2>
+    <p class="text-sm opacity-80">Copy the details below and share with me:</p>
+    <pre id="appErrorText" class="mt-2 text-sm bg-black/40 p-3 rounded"></pre>
+  </div>
+  <div id="root" class="min-h-screen"></div>
+
+  <script>
+  (function(){
+    function show(msg){
+      try{const box=document.getElementById('appError');const pre=document.getElementById('appErrorText');
+        pre.textContent=String(msg||'');box.style.display='block';}catch(_){}
+    }
+    window.onerror=function(message,source,lineno,colno,error){
+      show([message, source+':'+lineno+':'+colno, error && (error.stack||error)].filter(Boolean).join('\n'));return false;
+    };
+    window.addEventListener('unhandledrejection',e=>{
+      show('Unhandled promise rejection:\\n'+(e.reason && (e.reason.stack||e.reason) || e));
+    });
+  })();
+  </script>
+
+  <script>
+  try{
+    var SAMPLE_DATA = [
+      { id:1, title:"Centre for Advanced Research (CAR) Proposals", deadline:"2025-09-01", agency:"ICMR (Indian Council of Medical Research)", area:"Medical Research", eligibility:"Medical researchers from Indian institutes", budgetINR:"₹2,00,00,000", url:"https://www.icmr.gov.in/", category:"National", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:false },
+      { id:2, title:"First in World Challenge Grants", deadline:"2025-09-30", agency:"ICMR (Indian Council of Medical Research)", area:"Medical Innovation", eligibility:"Medical researchers and institutions", budgetINR:"₹5,00,00,000", url:"https://www.icmr.gov.in/", category:"National", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:false },
+      { id:3, title:"IGSTC 2+2 Call - Advanced Materials", deadline:"2026-05-20", agency:"IGSTC (Indo-German Science Technology Centre)", area:"Advanced Materials", eligibility:"Indian-German research consortia", budgetINR:"₹3,50,00,000", url:"https://www.igstc.org/", category:"Joint Collaboration", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:false },
+      { id:4, title:"DBT-BioCARe Programme", deadline:"2026-04-30", agency:"DBT (Department of Biotechnology)", area:"Biotechnology", eligibility:"Indian women scientists returning from career break", budgetINR:"₹55,000 per month", url:"https://dbtindia.gov.in/", category:"National", researchCategory:"Faculty - Fellowship", extendedDeadline:"", country:"India", isRecurring:false },
+      { id:101, title:"SERB Core Research Grant (CRG) – Annual", deadline:"", agency:"ANRF (formerly SERB)", area:"Science & Engineering", eligibility:"Faculty researchers in Indian institutions", budgetINR:"", url:"https://www.serbonline.in/", category:"National", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:true },
+      { id:102, title:"ICMR Ad-hoc Research Scheme – Annual", deadline:"", agency:"ICMR", area:"Medical Research", eligibility:"Medical colleges and universities in India", budgetINR:"", url:"https://www.icmr.gov.in/", category:"National", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:true }
+    ];
+
+    var e = React.createElement;
+    var useState = React.useState, useMemo = React.useMemo, useRef = React.useRef, useEffect = React.useEffect;
+
+    function norm(s){ return (s||"").toString().toLowerCase().trim(); }
+    function fmtDate(iso){ if(!iso) return ""; var d=new Date(iso); return isNaN(d)?iso:d.toLocaleDateString(undefined,{day:'2-digit',month:'2-digit',year:'numeric'}); }
+    function toCSV(rows, cols){
+      function esc(v){ return '"' + String(v==null?"":v).replace(/"/g,'""') + '"'; }
+      var headers = cols.filter(c=>c.visible).map(c=>c.label);
+      var body = rows.map(r=> cols.filter(c=>c.visible).map(c=>{
+        var v = (c.key==='url') ? (r.url||'') : (c.raw?c.raw(r):c.get(r));
+        return esc(v);
+      }).join(",")).join("\n");
+      return headers.map(esc).join(",") + "\n" + body;
+    }
+    function download(filename,text){
+      var blob = new Blob([text], {type:'text/csv;charset=utf-8;'});
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+    }
+
+    function App(){
+      var todayISO = new Date().toISOString().slice(0,10);
+      var _tab = useState("current"), tab = _tab[0], setTab = _tab[1];
+
+      // Load data.json (fallback to SAMPLE_DATA)
+      var _rows = useState(SAMPLE_DATA), rows = _rows[0], setRows = _rows[1];
+      useEffect(function(){
+        fetch('data.json', {cache:'no-store'})
+          .then(r=> r.ok ? r.json() : [])
+          .then(json=> { if (Array.isArray(json) && json.length) setRows(json); })
+          .catch(()=>{ /* keep SAMPLE_DATA */ });
+      }, []);
+
+      // Filters
+      var _india = useState(false), indiaOnly = _india[0], setIndiaOnly = _india[1]; // worldwide by default
+      var _future = useState(true), futureOnly = _future[0], setFutureOnly = _future[1];
+      var _q = useState(""), q = _q[0], setQ = _q[1];
+      var _area = useState("All"), area = _area[0], setArea = _area[1];
+      var _agency = useState("All"), agency = _agency[0], setAgency = _agency[1];
+      var _cat = useState("All"), category = _cat[0], setCategory = _cat[1];
+      var _rc = useState("All"), researchCat = _rc[0], setResearchCat = _rc[1];
+
+      // Columns
+      var _colsState = useState([
+        { key:'area',              label:'Area',                  visible:true,  raw:r=>r.area||'', get:r=>r.area||'' },
+        { key:'eligibility',       label:'Eligibility Criteria',  visible:true,  raw:r=>r.eligibility||'', get:r=>r.eligibility||'' },
+        { key:'budgetINR',         label:'Funding/Budget (INR)',  visible:true,  raw:r=>r.budgetINR||'', get:r=>r.budgetINR||'' },
+        { key:'url',               label:'Website Link',          visible:true,  raw:r=>r.url||'', get:r=> r.url ? e('a',{href:r.url,target:'_blank',className:'text-blue-600 underline'},'Visit Website') : '' },
+        { key:'category',          label:'Category',              visible:true,  raw:r=>r.category||'', get:r=>r.category||'' },
+        { key:'researchCategory',  label:'Research Category',     visible:true,  raw:r=>r.researchCategory||'', get:r=>r.researchCategory||'' },
+        { key:'extendedDeadline',  label:'Extended Deadline',     visible:true,  raw:r=>r.extendedDeadline||'', get:r=> r.extendedDeadline ? fmtDate(r.extendedDeadline) : '' },
+        { key:'title',             label:'Title',                 visible:true,  raw:r=>r.title||'', get:r=>r.title },
+        { key:'deadline',          label:'Deadline',              visible:true,  raw:r=>r.deadline||'', get:r=> fmtDate(r.deadline) },
+        { key:'agency',            label:'Funding Agency',        visible:true,  raw:r=>r.agency||'', get:r=>r.agency }
+      ]);
+      var cols = _colsState[0], setCols = _colsState[1];
+
+      // Column widths + resizing
+      var _w = useState([160,420,180,140,140,180,160,320,120,220]);
+      var colWidths = _w[0], setColWidths = _w[1];
+      var startXRef = React.useRef(0), startWRef = React.useRef(0), activeColRef = React.useRef(-1);
+      function startResize(i, ev){
+        activeColRef.current = i; startXRef.current = ev.clientX; startWRef.current = colWidths[i];
+        document.addEventListener('mousemove', doDrag); document.addEventListener('mouseup', stopDrag); ev.preventDefault();
+      }
+      function doDrag(ev){
+        var i = activeColRef.current; if(i<0) return;
+        var newW = Math.max(100, startWRef.current + (ev.clientX - startXRef.current));
+        setColWidths(colWidths.map((v,idx)=> idx===i ? newW : v));
+      }
+      function stopDrag(){ activeColRef.current=-1; document.removeEventListener('mousemove',doDrag); document.removeEventListener('mouseup',stopDrag); }
+
+      // Sorting
+      var _s1 = useState('deadline'), sortBy = _s1[0], setSortBy = _s1[1];
+      var _s2 = useState('asc'), sortDir = _s2[0], setSortDir = _s2[1];
+      function onSort(key){ if (sortBy===key) setSortDir(sortDir==='asc'?'desc':'asc'); else { setSortBy(key); setSortDir('asc'); } }
+
+      // Options from data
+      function uniq(key){
+        var set = {}; rows.forEach(r=>{ var v=r[key]; if(v) set[v]=1; });
+        var arr=['All']; Object.keys(set).sort().forEach(k=>arr.push(k)); return arr;
+      }
+      var areas = useMemo(()=>uniq('area'), [rows]);
+      var agencies = useMemo(()=>uniq('agency'), [rows]);
+      var categories = useMemo(()=>uniq('category'), [rows]);
+      var researchCats = useMemo(()=>uniq('researchCategory'), [rows]);
+
+      // Filtered + sorted
+      var filtered = useMemo(function(){
+        var list = rows.filter(function(r){
+          if (tab==='current' && r.isRecurring) return false;
+          if (tab==='recurring' && !r.isRecurring) return false;
+          if (futureOnly && tab==='current' && r.deadline && r.deadline < todayISO) return false;
+          if (indiaOnly && (r.country||'').toLowerCase().trim() !== 'india') return false;
+          if (area!=='All' && r.area !== area) return false;
+          if (agency!=='All' && r.agency !== agency) return false;
+          if (category!=='All' && r.category !== category) return false;
+          if (researchCat!=='All' && r.researchCategory !== researchCat) return false;
+          var qq = (q||'').toLowerCase().trim();
+          if (qq){
+            var hay = [r.title,r.area,r.agency,r.eligibility,r.researchCategory].join(' ').toLowerCase();
+            if (hay.indexOf(qq)===-1) return false;
+          }
+          return true;
+        });
+        var dir = (sortDir==='asc') ? 1 : -1;
+        return list.sort(function(a,b){
+          var va = a[sortBy] || ''; var vb = b[sortBy] || '';
+          return String(va).localeCompare(String(vb)) * dir;
+        });
+      }, [rows, tab, futureOnly, indiaOnly, q, area, agency, category, researchCat, sortBy, sortDir]);
+
+      function reset(){ setQ(''); setArea('All'); setAgency('All'); setCategory('All'); setResearchCat('All'); setFutureOnly(true); setIndiaOnly(false); setSortBy('deadline'); setSortDir('asc'); }
+      function toggleCol(key){ setCols(cols.map(c=> c.key===key ? Object.assign({}, c, {visible:!c.visible}) : c)); }
+
+      // Sidebar UI
+      var sidebar = [];
+      sidebar.push(e('h2',{className:'text-lg font-semibold flex items-center gap-2'},['🔎','Current Calls Filters']));
+      sidebar.push(e('label',{className:'flex items-center gap-3'}, e('input',{type:'checkbox',className:'h-4 w-4',checked:futureOnly,onChange:ev=>setFutureOnly(ev.target.checked)}), e('span',null,'Show only future deadlines (Current tab)')));
+      sidebar.push(e('label',{className:'flex items-center gap-3'}, e('input',{type:'checkbox',className:'h-4 w-4',checked:indiaOnly,onChange:ev=>setIndiaOnly(ev.target.checked)}), e('span',null,'India-related proposals only')));
+      sidebar.push(e('input',{className:'w-full rounded-xl border px-3 py-2 text-sm shadow-sm',placeholder:'Search in titles, areas, agencies, or eligibility',value:q,onChange:ev=>setQ(ev.target.value)}));
+      [['Filter by Area', areas, area, setArea],['Filter by Funding Agency', agencies, agency, setAgency],['Filter by Category', categories, category, setCategory],['Filter by Research Category', researchCats, researchCat, setResearchCat]]
+      .forEach(([label,opts,val,set])=>{
+        sidebar.push(e('div',{className:'space-y-1'}, e('div',{className:'text-xs text-gray-500'},label),
+          e('select',{className:'w-full rounded-xl border px-3 py-2 text-sm bg-white shadow-sm',value:val,onChange:ev=>set(ev.target.value)},
+            opts.map(o=>e('option',{key:o,value:o},o))
+          )));
+      });
+      sidebar.push(e('div',{className:'pt-2 border-t'}, e('div',null, e('div',{className:'text-sm font-medium mb-2'},'Show / Hide Columns'),
+        e('div',{className:'grid grid-cols-2 gap-2 text-sm'},
+          cols.map(c=> e('label',{key:c.key,className:'flex items-center gap-2'}, e('input',{type:'checkbox',checked:c.visible,onChange:()=>toggleCol(c.key)}), c.label))
+        ))));
+      sidebar.push(e('div',{className:'flex gap-2 pt-3'},
+        e('button',{onClick:()=>download(`calls_${tab}_${new Date().toISOString().slice(0,10)}.csv`, toCSV(filtered, cols)),className:'flex-1 rounded-xl border px-3 py-2 text-sm'},'⬇️ Export to CSV'),
+        e('button',{onClick:reset,className:'flex-1 rounded-xl border px-3 py-2 text-sm'},'↺ Reset')
+      ));
+
+      // Table
+      var visibleCols = cols.filter(c=>c.visible);
+      var headerRow = visibleCols.map((c,i)=> e('th',{key:c.key,className:'px-4 py-2 text-left font-semibold border-b whitespace-nowrap resizable select-none',onClick:()=>onSort(c.key),title:'Click to sort'},[c.label,e('span',{className:'sort-ind'},''),e('span',{className:'col-resizer',onMouseDown:ev=>startResize(i,ev),title:'Drag to resize'})]));
+      var bodyRows = filtered.map((r,rowIdx)=> e('tr',{key:r.id||rowIdx,className: rowIdx%2 ? 'bg-white' : 'bg-gray-50'},
+        cols.filter(c=>c.visible).map(c=> e('td',{key:c.key,className:'px-4 py-2 border-b align-top'}, c.get(r)))
+      ));
+
+      return e('div', null,
+        e('header',{className:'sticky top-0 bg-white/85 backdrop-blur border-b'},
+          e('div',{className:'max-w-6xl mx-auto px-4 py-5 flex items-center gap-3'},[ e('div',{className:'text-3xl'},'📄'),
+            e('div',null,[ e('h1',{className:'text-3xl font-bold'},'Call Proposals Management System'),
+              e('p',{className:'text-xs text-gray-500 -mt-1'},'Filter, sort, resize, show/hide, and export opportunities') ]) ])
+        ),
+        e('main',{className:'max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6'},[
+          e('aside',{className:'lg:col-span-4 xl:col-span-3'},
+            e('div',{className:'rounded-2xl border bg-white p-4 shadow-sm'}, sidebar)
+          ),
+          e('section',{className:'lg:col-span-8 xl:col-span-9 space-y-4'},[
+            e('div',{className:'flex items-center gap-3 border-b pb-2'},[
+              e('button',{onClick:()=>setTab('current'),className:'px-3 py-2 text-sm border-b-2 -mb-[1px] ' + (tab==='current'?'border-blue-600 font-semibold':'border-transparent text-gray-500 hover:text-gray-700')},'📊 Current Calls'),
+              e('button',{onClick:()=>setTab('recurring'),className:'px-3 py-2 text-sm border-b-2 -mb-[1px] ' + (tab==='recurring'?'border-blue-600 font-semibold':'border-transparent text-gray-500 hover:text-gray-700')},'🔁 Recurring Annual Calls'),
+              e('div',{className:'ml-auto text-sm text-gray-600'}, 'Total ' + (tab==='current'?'Current':'Recurring') + ' Proposals: ' + filtered.length)
+            ]),
+            e('div',{className:'rounded-2xl border bg-white shadow-sm overflow-x-auto'},
+              e('table',{className:'min-w-full text-sm sticky-head', style:{tableLayout:'fixed'}},[
+                e('colgroup', null, visibleCols.map((c,i)=> e('col',{key:c.key,style:{width:(i<colWidths.length?colWidths[i]:160)+'px'}}))),
+                e('thead',null, e('tr',{className:'bg-gray-50 text-gray-700'}, headerRow)),
+                e('tbody',null, bodyRows)
+              ])
+            )
+          ])
+        ])
+      );
+    }
+
+    var root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  }catch(err){
+    const box=document.getElementById('appError'); const pre=document.getElementById('appErrorText');
+    pre.textContent=(err && (err.stack || err.toString())) || String(err); box.style.display='block';
+  }
+  </script>
+</body>
+</html>
