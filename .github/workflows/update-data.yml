@@ -2,20 +2,44 @@ name: Update data.json (daily)
 
 on:
   schedule:
-    - cron: "0 0 * * *"   # once a day at midnight UTC
-  workflow_dispatch:      # also allow manual run
+    # Every day at 00:00 UTC
+    - cron: "0 0 * * *"
+  # Allow manual runs from the Actions tab
+  workflow_dispatch:
+
+# IMPORTANT: give this workflow permission to write to the repo
+permissions:
+  contents: write
+
+# Prevent overlapping runs of the same workflow
+concurrency:
+  group: update-data
+  cancel-in-progress: false
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                 # keep history (safer for commits)
+          persist-credentials: true      # keep token in origin for git push
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      # (Optional) cache pip; uncomment if you like
+      # - name: Cache pip
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.cache/pip
+      #     key: ${{ runner.os }}-pip-${{ hashFiles('scraper/requirements.txt') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-pip-
 
       - name: Install deps
         run: |
@@ -24,14 +48,44 @@ jobs:
 
       - name: Run scraper
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # <-- your GitHub Secret
+          # Add this in Settings → Secrets and variables → Actions
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python scraper/scraper.py
 
       - name: Commit & push if changed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          set -e
+
+          # If nothing changed, skip commit
+          if git diff --quiet --exit-code data.json; then
+            echo "No changes in data.json"
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Ensure 'origin' uses the token (avoids 403)
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+
           git add data.json
-          git commit -m "chore: auto-update data.json ($(date -u +%Y-%m-%dT%H:%M:%SZ))" || echo "No changes to commit"
+          git commit -m "chore: auto-update data.json ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
           git push
+
+      # ---------- If your main branch is protected ----------
+      # Replace the "Commit & push if changed" step above with this PR step.
+      #
+      # - name: Create Pull Request
+      #   if: ${{ always() }}
+      #   uses: peter-evans/create-pull-request@v6
+      #   with:
+      #     commit-message: "chore: auto-update data.json"
+      #     title: "chore: auto-update data.json"
+      #     body: "Automated update of data.json"
+      #     branch: bot/update-data-json
+      #     base: main
+      #     add-paths: |
+      #       data.json
