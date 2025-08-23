@@ -8,13 +8,29 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <style>
-    #appError{display:none;position:fixed;inset:0;background:#111827cc;color:#fff;z-index:9999;padding:16px;overflow:auto}
+    /* Error overlay */
+    #appError{display:none;position:fixed;inset:0;background:#0b1220d0;color:#fff;z-index:9999;padding:16px;overflow:auto}
     #appError pre{white-space:pre-wrap;word-break:break-word}
-    th.resizable{position:relative}
-    .col-resizer{position:absolute;right:-3px;top:0;width:12px;height:100%;cursor:col-resize;user-select:none;background:transparent}
-    .col-resizer:hover{background:rgba(59,130,246,.15)}
+
+    /* Table polish */
     .sticky-head thead th{position:sticky;top:0;background:#f8fafc;z-index:1}
-    .sort-ind{margin-left:.35rem;font-size:.9em;opacity:.7}
+    table.min-w-full { font-size: 0.92rem; }
+    tbody tr:hover { background:#f8fafc; }
+    tbody tr:nth-child(odd) { background: #fcfcfd; }
+    thead th { border-bottom:1px solid #e5e7eb; }
+    td, th { border-bottom:1px solid #eef2f7; }
+
+    /* Column resizing */
+    th.resizable{position:relative;user-select:none}
+    .col-resizer{position:absolute;right:-3px;top:0;width:12px;height:100%;cursor:col-resize;background:transparent}
+    .col-resizer:hover{background:rgba(59,130,246,.15)}
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .5rem;border-radius:999px;font-size:.75rem}
+    .badge.gray { background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0 }
+    .badge.blue { background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe }
+    .badge.green{ background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0 }
+    .badge.purple{ background:#f5f3ff;color:#4c1d95;border:1px solid #ddd6fe }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -28,11 +44,16 @@
   <script>
   (function(){
     function show(msg){
-      try{const box=document.getElementById('appError');const pre=document.getElementById('appErrorText');
-        pre.textContent=String(msg||'');box.style.display='block';}catch(_){}
+      try{
+        const box=document.getElementById('appError');
+        const pre=document.getElementById('appErrorText');
+        pre.textContent=String(msg||'');
+        box.style.display='block';
+      }catch(_){}
     }
     window.onerror=function(message,source,lineno,colno,error){
-      show([message, source+':'+lineno+':'+colno, error && (error.stack||error)].filter(Boolean).join('\n'));return false;
+      show([message, source+':'+lineno+':'+colno, error && (error.stack||error)].filter(Boolean).join('\n'));
+      return false;
     };
     window.addEventListener('unhandledrejection',e=>{
       show('Unhandled promise rejection:\\n'+(e.reason && (e.reason.stack||e.reason) || e));
@@ -42,6 +63,7 @@
 
   <script>
   try{
+    /* ---------------- Fallback data (used if data.json is empty/missing) ---------------- */
     var SAMPLE_DATA = [
       { id:1, title:"Centre for Advanced Research (CAR) Proposals", deadline:"2025-09-01", agency:"ICMR (Indian Council of Medical Research)", area:"Medical Research", eligibility:"Medical researchers from Indian institutes", budgetINR:"₹2,00,00,000", url:"https://www.icmr.gov.in/", category:"National", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:false },
       { id:2, title:"First in World Challenge Grants", deadline:"2025-09-30", agency:"ICMR (Indian Council of Medical Research)", area:"Medical Innovation", eligibility:"Medical researchers and institutions", budgetINR:"₹5,00,00,000", url:"https://www.icmr.gov.in/", category:"National", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:false },
@@ -52,10 +74,17 @@
     ];
 
     var e = React.createElement;
-    var useState = React.useState, useMemo = React.useMemo, useRef = React.useRef, useEffect = React.useEffect;
+    var {useState,useMemo,useEffect,useRef} = React;
 
+    /* ---------------- Helpers ---------------- */
     function norm(s){ return (s||"").toString().toLowerCase().trim(); }
-    function fmtDate(iso){ if(!iso) return ""; var d=new Date(iso); return isNaN(d)?iso:d.toLocaleDateString(undefined,{day:'2-digit',month:'2-digit',year:'numeric'}); }
+    function showNA(v, placeholder="N/A"){ if(v==null) return placeholder; const s=String(v).trim(); return s ? s : placeholder; }
+    function fmtDateOrNA(iso, placeholder="N/A"){ if(!iso) return placeholder; const d=new Date(iso); if(isNaN(d)) return placeholder; return d.toLocaleDateString(undefined,{day:'2-digit',month:'2-digit',year:'numeric'}) }
+
+    function badge(text, kind="gray"){
+      return e('span',{className:`badge ${kind}`}, text || 'N/A');
+    }
+
     function toCSV(rows, cols){
       function esc(v){ return '"' + String(v==null?"":v).replace(/"/g,'""') + '"'; }
       var headers = cols.filter(c=>c.visible).map(c=>c.label);
@@ -70,64 +99,65 @@
       var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
     }
 
+    /* ---------------- App ---------------- */
     function App(){
       var todayISO = new Date().toISOString().slice(0,10);
-      var _tab = useState("current"), tab = _tab[0], setTab = _tab[1];
 
-      // Load data.json (fallback to SAMPLE_DATA)
-      var _rows = useState(SAMPLE_DATA), rows = _rows[0], setRows = _rows[1];
+      // Tabs
+      var [tab,setTab] = useState("current");
+
+      // Data
+      var [rows,setRows] = useState(SAMPLE_DATA);
       useEffect(function(){
         fetch('data.json', {cache:'no-store'})
           .then(r=> r.ok ? r.json() : [])
           .then(json=> { if (Array.isArray(json) && json.length) setRows(json); })
-          .catch(()=>{ /* keep SAMPLE_DATA */ });
+          .catch(()=>{ /* keep sample */ });
       }, []);
 
       // Filters
-      var _india = useState(false), indiaOnly = _india[0], setIndiaOnly = _india[1]; // worldwide by default
-      var _future = useState(true), futureOnly = _future[0], setFutureOnly = _future[1];
-      var _q = useState(""), q = _q[0], setQ = _q[1];
-      var _area = useState("All"), area = _area[0], setArea = _area[1];
-      var _agency = useState("All"), agency = _agency[0], setAgency = _agency[1];
-      var _cat = useState("All"), category = _cat[0], setCategory = _cat[1];
-      var _rc = useState("All"), researchCat = _rc[0], setResearchCat = _rc[1];
+      var [indiaOnly,setIndiaOnly] = useState(false);  // worldwide default
+      var [futureOnly,setFutureOnly] = useState(true);
+      var [q,setQ] = useState("");
+      var [area,setArea] = useState("All");
+      var [agency,setAgency] = useState("All");
+      var [category,setCategory] = useState("All");
+      var [researchCat,setResearchCat] = useState("All");
 
-      // Columns
-      var _colsState = useState([
-        { key:'area',              label:'Area',                  visible:true,  raw:r=>r.area||'', get:r=>r.area||'' },
-        { key:'eligibility',       label:'Eligibility Criteria',  visible:true,  raw:r=>r.eligibility||'', get:r=>r.eligibility||'' },
-        { key:'budgetINR',         label:'Funding/Budget (INR)',  visible:true,  raw:r=>r.budgetINR||'', get:r=>r.budgetINR||'' },
-        { key:'url',               label:'Website Link',          visible:true,  raw:r=>r.url||'', get:r=> r.url ? e('a',{href:r.url,target:'_blank',className:'text-blue-600 underline'},'Visit Website') : '' },
-        { key:'category',          label:'Category',              visible:true,  raw:r=>r.category||'', get:r=>r.category||'' },
-        { key:'researchCategory',  label:'Research Category',     visible:true,  raw:r=>r.researchCategory||'', get:r=>r.researchCategory||'' },
-        { key:'extendedDeadline',  label:'Extended Deadline',     visible:true,  raw:r=>r.extendedDeadline||'', get:r=> r.extendedDeadline ? fmtDate(r.extendedDeadline) : '' },
-        { key:'title',             label:'Title',                 visible:true,  raw:r=>r.title||'', get:r=>r.title },
-        { key:'deadline',          label:'Deadline',              visible:true,  raw:r=>r.deadline||'', get:r=> fmtDate(r.deadline) },
-        { key:'agency',            label:'Funding Agency',        visible:true,  raw:r=>r.agency||'', get:r=>r.agency }
+      // Column definitions (with N/A handling)
+      var [cols,setCols] = useState([
+        { key:'title',   label:'Title', visible:true, raw:r=>r.title||'', get:r=> showNA(r.title) },
+        { key:'deadline',label:'Deadline', visible:true, raw:r=>r.deadline||'', get:r=> fmtDateOrNA(r.deadline) },
+        { key:'agency',  label:'Funding Agency', visible:true, raw:r=>r.agency||'', get:r=> showNA(r.agency) },
+        { key:'area',    label:'Area', visible:true, raw:r=>r.area||'', get:r=> showNA(r.area) },
+        { key:'eligibility', label:'Eligibility Criteria', visible:true, raw:r=>r.eligibility||'', get:r=> showNA(r.eligibility) },
+        { key:'budgetINR', label:'Funding/Budget (INR)', visible:true, raw:r=>r.budgetINR||'', get:r=> showNA(r.budgetINR) },
+        { key:'url',     label:'Website Link', visible:true, raw:r=>r.url||'', get:r=> r.url ? e('a',{href:r.url,target:'_blank',className:'text-blue-600 underline'},'Visit Website') : e('span',{className:'text-gray-400'},'N/A') },
+        { key:'category',label:'Category', visible:true, raw:r=>r.category||'', get:r=> r.category?badge(r.category, r.category==='National'?'blue':r.category==='Joint Collaboration'?'purple':'green'):badge('N/A') },
+        { key:'researchCategory',label:'Research Category', visible:true, raw:r=>r.researchCategory||'', get:r=> showNA(r.researchCategory) },
+        { key:'extendedDeadline',label:'Extended Deadline', visible:true, raw:r=>r.extendedDeadline||'', get:r=> r.extendedDeadline ? fmtDateOrNA(r.extendedDeadline) : 'N/A' }
       ]);
-      var cols = _colsState[0], setCols = _colsState[1];
 
       // Column widths + resizing
-      var _w = useState([160,420,180,140,140,180,160,320,120,220]);
-      var colWidths = _w[0], setColWidths = _w[1];
-      var startXRef = React.useRef(0), startWRef = React.useRef(0), activeColRef = React.useRef(-1);
+      var [colWidths,setColWidths] = useState([360,120,240,160,420,180,140,160,180,160]);
+      var startXRef = useRef(0), startWRef = useRef(0), activeColRef = useRef(-1);
       function startResize(i, ev){
         activeColRef.current = i; startXRef.current = ev.clientX; startWRef.current = colWidths[i];
         document.addEventListener('mousemove', doDrag); document.addEventListener('mouseup', stopDrag); ev.preventDefault();
       }
       function doDrag(ev){
         var i = activeColRef.current; if(i<0) return;
-        var newW = Math.max(100, startWRef.current + (ev.clientX - startXRef.current));
+        var newW = Math.max(120, startWRef.current + (ev.clientX - startXRef.current));
         setColWidths(colWidths.map((v,idx)=> idx===i ? newW : v));
       }
       function stopDrag(){ activeColRef.current=-1; document.removeEventListener('mousemove',doDrag); document.removeEventListener('mouseup',stopDrag); }
 
       // Sorting
-      var _s1 = useState('deadline'), sortBy = _s1[0], setSortBy = _s1[1];
-      var _s2 = useState('asc'), sortDir = _s2[0], setSortDir = _s2[1];
+      var [sortBy,setSortBy] = useState('deadline');
+      var [sortDir,setSortDir] = useState('asc');
       function onSort(key){ if (sortBy===key) setSortDir(sortDir==='asc'?'desc':'asc'); else { setSortBy(key); setSortDir('asc'); } }
 
-      // Options from data
+      // Select options
       function uniq(key){
         var set = {}; rows.forEach(r=>{ var v=r[key]; if(v) set[v]=1; });
         var arr=['All']; Object.keys(set).sort().forEach(k=>arr.push(k)); return arr;
@@ -137,7 +167,7 @@
       var categories = useMemo(()=>uniq('category'), [rows]);
       var researchCats = useMemo(()=>uniq('researchCategory'), [rows]);
 
-      // Filtered + sorted
+      // Filter + sort
       var filtered = useMemo(function(){
         var list = rows.filter(function(r){
           if (tab==='current' && r.isRecurring) return false;
@@ -165,7 +195,7 @@
       function reset(){ setQ(''); setArea('All'); setAgency('All'); setCategory('All'); setResearchCat('All'); setFutureOnly(true); setIndiaOnly(false); setSortBy('deadline'); setSortDir('asc'); }
       function toggleCol(key){ setCols(cols.map(c=> c.key===key ? Object.assign({}, c, {visible:!c.visible}) : c)); }
 
-      // Sidebar UI
+      // Sidebar
       var sidebar = [];
       sidebar.push(e('h2',{className:'text-lg font-semibold flex items-center gap-2'},['🔎','Current Calls Filters']));
       sidebar.push(e('label',{className:'flex items-center gap-3'}, e('input',{type:'checkbox',className:'h-4 w-4',checked:futureOnly,onChange:ev=>setFutureOnly(ev.target.checked)}), e('span',null,'Show only future deadlines (Current tab)')));
@@ -187,20 +217,24 @@
         e('button',{onClick:reset,className:'flex-1 rounded-xl border px-3 py-2 text-sm'},'↺ Reset')
       ));
 
-      // Table
+      // Table head & body
       var visibleCols = cols.filter(c=>c.visible);
-      var headerRow = visibleCols.map((c,i)=> e('th',{key:c.key,className:'px-4 py-2 text-left font-semibold border-b whitespace-nowrap resizable select-none',onClick:()=>onSort(c.key),title:'Click to sort'},[c.label,e('span',{className:'sort-ind'},''),e('span',{className:'col-resizer',onMouseDown:ev=>startResize(i,ev),title:'Drag to resize'})]));
-      var bodyRows = filtered.map((r,rowIdx)=> e('tr',{key:r.id||rowIdx,className: rowIdx%2 ? 'bg-white' : 'bg-gray-50'},
-        cols.filter(c=>c.visible).map(c=> e('td',{key:c.key,className:'px-4 py-2 border-b align-top'}, c.get(r)))
+      var headerRow = visibleCols.map((c,i)=> e('th',{key:c.key,className:'px-4 py-2 text-left font-semibold resizable whitespace-nowrap select-none',onClick:()=>onSort(c.key),title:'Click to sort'},[
+        c.label, e('span',{className:'col-resizer',onMouseDown:ev=>startResize(i,ev),title:'Drag to resize'})
+      ]));
+      var bodyRows = filtered.map((r,rowIdx)=> e('tr',{key:r.id||rowIdx},
+        visibleCols.map(c=> e('td',{key:c.key,className:'px-4 py-2 align-top'}, c.get(r)))
       ));
 
       return e('div', null,
         e('header',{className:'sticky top-0 bg-white/85 backdrop-blur border-b'},
-          e('div',{className:'max-w-6xl mx-auto px-4 py-5 flex items-center gap-3'},[ e('div',{className:'text-3xl'},'📄'),
+          e('div',{className:'max-w-7xl mx-auto px-4 py-5 flex items-center gap-3'},[
+            e('div',{className:'text-3xl'},'📄'),
             e('div',null,[ e('h1',{className:'text-3xl font-bold'},'Call Proposals Management System'),
-              e('p',{className:'text-xs text-gray-500 -mt-1'},'Filter, sort, resize, show/hide, and export opportunities') ]) ])
+              e('p',{className:'text-xs text-gray-500 -mt-1'},'Filter, sort, resize, show/hide, and export opportunities') ])
+          ])
         ),
-        e('main',{className:'max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6'},[
+        e('main',{className:'max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6'},[
           e('aside',{className:'lg:col-span-4 xl:col-span-3'},
             e('div',{className:'rounded-2xl border bg-white p-4 shadow-sm'}, sidebar)
           ),
@@ -213,7 +247,7 @@
             e('div',{className:'rounded-2xl border bg-white shadow-sm overflow-x-auto'},
               e('table',{className:'min-w-full text-sm sticky-head', style:{tableLayout:'fixed'}},[
                 e('colgroup', null, visibleCols.map((c,i)=> e('col',{key:c.key,style:{width:(i<colWidths.length?colWidths[i]:160)+'px'}}))),
-                e('thead',null, e('tr',{className:'bg-gray-50 text-gray-700'}, headerRow)),
+                e('thead',null, e('tr',null, headerRow)),
                 e('tbody',null, bodyRows)
               ])
             )
