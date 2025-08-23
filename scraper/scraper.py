@@ -1,520 +1,516 @@
 #!/usr/bin/env python3
 """
-AI-assisted funding calls scraper.
+Scrapes research funding calls from a set of known sources,
+extracts key fields from HTML or PDF (Deadline, Eligibility, Area, Budget),
+deduplicates results, and writes data.json for the dashboard.
 
-Order of extraction for each call URL:
-1) Structured HTML: tables (th/td), definition lists (dt/dd), <time>, <meta>, JSON-LD
-2) Heuristics over full page text
-3) PDF (if linked) with the same steps
-4) Optional AI extraction (if OPENAI_API_KEY is set) to fill deadline/eligibility/area/budget
+- Heuristic extraction first (regex + structural parsing)
+- Optional OpenAI fallback if OPENAI_API_KEY is set (for messy pages/PDFs)
+- Designed to run in GitHub Actions on a schedule
 
-Finally, dedupe by (title + agency), prefer non-empty fields.
-
-Run locally:
-    export OPENAI_API_KEY="sk-..."   # optional
-    python scraper/scraper.py
+Requires:
+  requests, beautifulsoup4, lxml, python-dateutil, pdfplumber (or pypdf)
 """
 
-import json
+from __future__ import annotations
 import os
 import re
-import sys
-from io import BytesIO
-from typing import Dict, List
-from urllib.parse import urljoin, urlparse
+import json
+import time
+import math
+import hashlib
+import logging
+import urllib.parse
+from typing import Dict, List, Optional, Tuple
 
 import requests
 from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
-from pdfminer.high_level import extract_text as pdf_extract_text
 
-# ===== Optional AI client =====
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
-_AI_CLIENT = None
-if OPENAI_API_KEY:
-    try:
-        from openai import OpenAI
-        _AI_CLIENT = OpenAI(api_key=OPENAI_API_KEY)
-    except Exception as _e:
-        _AI_CLIENT = None
+# PDF extraction (prefer pdfplumber; fallback to PyPDF2 if available)
+PDF_BACKENDS = []
+try:
+    import pdfplumber  # type: ignore
+    PDF_BACKENDS.append("pdfplumber")
+except Exception:
+    pass
+try:
+    from PyPDF2 import PdfReader  # type: ignore
+    PDF_BACKENDS.append("pypdf2")
+except Exception:
+    pass
 
-# ===== Paths/Config =====
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-OUTPUT_FILE = os.path.join(REPO_ROOT, "data.json")
-TIMEOUT = 50
-PDF_MAX_BYTES = 16 * 1024 * 1024
-MAX_AI_CHARS = 15000  # safety cap
+# Optional AI fallback
+OPENAI_ENABLED = False
+try:
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if OPENAI_API_KEY:
+        import openai  # type: ignore
+
+        openai.api_key = OPENAI_API_KEY
+        OPENAI_ENABLED = True
+except Exception:
+    OPENAI_ENABLED = False
+
+
+# ----------------------------- config & logging -----------------------------
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s  %(levelname)-7s  %(message)s",
+)
+log = logging.getLogger("scraper")
 
 HEADERS = {
-    "User-Agent": "FundingCallsBot/1.4 (+https://github.com/)",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    )
 }
+TIMEOUT = 30
+SLEEP_BETWEEN = 1.0  # be polite
 
-# Detection keywords / blocks
-KEYWORDS = ["call", "proposal", "funding", "fellowship", "grant", "opportunity"]
-BLOCK = ["faq", "faqs", "form", "application form", "format", "tender", "corrigendum"]
+# Links that typically contain calls
+KEYWORDS = (
+    "call", "grant", "fund", "funding", "proposal",
+    "fellowship", "schemes", "research", "programme", "program"
+)
+EXCLUDE_WORDS = ("faq", "faqs", "form", "forms", "guideline", "guidelines")
 
-# Date regex candidates
-DATE_RE = [
-    r"\d{1,2}[/-]\d{1,2}[/-]\d{2,4}",
-    r"\d{4}-\d{2}-\d{2}",
-    r"\d{1,2}\s+(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}",
-]
+# Indian agencies (for indian-related flag)
+INDIAN_AGENCIES = (
+    "dst", "dbt", "serb", "icmr", "csir", "igstc",
+    "anrf", "anr f", "ug c", "ugc", "meity", "icar", "drdo"
+)
 
-# A few agencies as seed sources; add more as desired
-AGENCIES = [
+# Sources to crawl (listing pages)
+SOURCES: List[Dict[str, str]] = [
+    # --- India ---
     {
-        "name": "ICMR (Indian Council of Medical Research)",
-        "country": "India",
-        "category": "National",
-        "research": "Research Proposal",
-        "base": "https://www.icmr.gov.in/",
-        "start_urls": [
-            "https://www.icmr.gov.in/Pages/Opportunities/Opportunities_Grants.html",
-            "https://www.icmr.gov.in/Pages/ICMR_Announcement.html",
-        ],
+        "agency": "DBT (Department of Biotechnology)",
+        "url": "https://dbtindia.gov.in/latest-announcements",
+        "base": "https://dbtindia.gov.in",
     },
     {
-        "name": "DBT (Department of Biotechnology)",
-        "country": "India",
-        "category": "National",
-        "research": "Research Proposal",
-        "base": "https://dbtindia.gov.in/",
-        "start_urls": [
-            "https://dbtindia.gov.in/whats-new",
-            "https://dbtindia.gov.in/call-for-proposals",
-        ],
+        "agency": "DST (Department of Science & Technology)",
+        "url": "https://dst.gov.in/call-for-proposals",
+        "base": "https://dst.gov.in",
     },
     {
-        "name": "DST (Department of Science & Technology)",
-        "country": "India",
-        "category": "National",
-        "research": "Research Proposal",
-        "base": "https://dst.gov.in/",
-        "start_urls": [
-            "https://dst.gov.in/call-for-proposals",
-            "https://dst.gov.in/funding",
-        ],
+        "agency": "ICMR (Indian Council of Medical Research)",
+        "url": "https://main.icmr.nic.in/calls",
+        "base": "https://main.icmr.nic.in",
     },
     {
-        "name": "IGSTC (Indo-German Science Technology Centre)",
-        "country": "India",
-        "category": "Joint Collaboration",
-        "research": "Research Proposal",
-        "base": "https://www.igstc.org/",
-        "start_urls": [
-            "https://www.igstc.org/funding-opportunities",
-            "https://www.igstc.org/",
-        ],
-    },
-    # Global examples
-    {
-        "name": "European Research Council",
-        "country": "Global",
-        "category": "International",
-        "research": "Research Proposal",
-        "base": "https://erc.europa.eu/",
-        "start_urls": ["https://erc.europa.eu/news-events/news"],
+        "agency": "CSIR (Council of Scientific & Industrial Research)",
+        "url": "https://www.csir.res.in/grants-schemes",
+        "base": "https://www.csir.res.in",
     },
     {
-        "name": "NIH",
-        "country": "Global",
-        "category": "International",
-        "research": "Research Proposal",
-        "base": "https://grants.nih.gov/",
-        "start_urls": [
-            "https://grants.nih.gov/funding/searchguide/nih-guide-to-grants-and-contracts.cfm"
-        ],
+        "agency": "IGSTC (Indo-German Science & Technology Centre)",
+        "url": "https://www.igstc.org/",
+        "base": "https://www.igstc.org",
+    },
+    # --- International (examples) ---
+    {
+        "agency": "European Research Council",
+        "url": "https://erc.europa.eu/news-events/news",
+        "base": "https://erc.europa.eu",
+    },
+    {
+        "agency": "Royal Society",
+        "url": "https://royalsociety.org/grants-schemes-awards/grants/",
+        "base": "https://royalsociety.org",
     },
 ]
 
-# Known recurring calls
-RECURRING = [
-    {
-        "title": "SERB Core Research Grant (CRG) – Annual",
-        "deadline": "",
-        "agency": "ANRF (formerly SERB)",
-        "area": "Science & Engineering",
-        "eligibility": "Faculty researchers in Indian institutions",
-        "budgetINR": "",
-        "url": "https://www.serbonline.in/",
-        "category": "National",
-        "researchCategory": "Research Proposal",
-        "extendedDeadline": "",
-        "country": "India",
-        "isRecurring": True,
-    }
-]
+# ----------------------------- helpers --------------------------------------
 
-# -------- Helpers --------
-def http_get(url: str) -> BeautifulSoup:
-    r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
-    r.raise_for_status()
-    return BeautifulSoup(r.text, "lxml")
 
-def full_url(base: str, href: str) -> str:
-    return urljoin(base, href or "")
-
-def is_pdf_url(u: str) -> bool:
-    return (u or "").lower().split("?")[0].endswith(".pdf")
-
-def page_text(soup: BeautifulSoup) -> str:
-    for s in soup(["script", "style", "noscript", "header", "footer", "nav"]):
-        s.extract()
-    return re.sub(r"\s+", " ", soup.get_text(" ", strip=True))
-
-def pick_title(soup: BeautifulSoup, fallback: str) -> str:
-    h1 = soup.find("h1")
-    if h1 and h1.get_text(strip=True):
-        return h1.get_text(strip=True)
-    if soup.title and soup.title.string:
-        return soup.title.string.strip()
-    return (fallback or "").strip()
-
-def parse_date_any(s: str) -> str:
-    s = (s or "").strip()
-    if not s:
-        return ""
+def http_get(url: str) -> Optional[requests.Response]:
     try:
-        d = dateparser.parse(s, dayfirst=False, fuzzy=True)
-        return d.strftime("%Y-%m-%d")
-    except Exception:
-        return ""
-
-def extract_pdf_text(url: str) -> str:
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=TIMEOUT, stream=True)
+        r = requests.get(url, headers=HEADERS, timeout=TIMEOUT, allow_redirects=True)
         r.raise_for_status()
-        b = r.content
-        if len(b) > PDF_MAX_BYTES:
-            return ""
-        return pdf_extract_text(BytesIO(b)) or ""
-    except Exception:
-        return ""
+        return r
+    except Exception as e:
+        log.warning("GET failed %s -> %s", url, e)
+        return None
 
-def clean_key(s: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
 
-def record_key(r: Dict) -> str:
-    return clean_key(f"{r.get('title','')}|{r.get('agency','')}")
+def absolute_url(base: str, href: str) -> str:
+    return urllib.parse.urljoin(base, href)
 
-def standardize(r: Dict) -> Dict:
-    def t(x): return (x or "").strip()
-    return {
-        "title": t(r.get("title")),
-        "deadline": parse_date_any(r.get("deadline") or ""),
-        "agency": t(r.get("agency")),
-        "area": t(r.get("area")),
-        "eligibility": t(r.get("eligibility")),
-        "budgetINR": t(r.get("budgetINR")),
-        "url": t(r.get("url")),
-        "category": t(r.get("category")),
-        "researchCategory": t(r.get("researchCategory")),
-        "extendedDeadline": parse_date_any(r.get("extendedDeadline") or ""),
-        "country": t(r.get("country") or "Global"),
-        "isRecurring": bool(r.get("isRecurring", False)),
+
+def clean_text(s: str) -> str:
+    return re.sub(r"\s+", " ", s or "").strip()
+
+
+def norm_key(*parts: str) -> str:
+    return "|".join(clean_text(p).lower() for p in parts if p)
+
+
+def is_pdf_link(url: str) -> bool:
+    return url.lower().split("?")[0].endswith(".pdf")
+
+
+def is_probably_indian(agency: str, text: str) -> bool:
+    t = f"{agency} {text}".lower()
+    return any(k in t for k in INDIAN_AGENCIES) or (" india" in t or "indian" in t)
+
+
+def looks_like_call_text(s: str) -> bool:
+    s = (s or "").lower()
+    if any(x in s for x in EXCLUDE_WORDS):
+        return False
+    return any(k in s for k in KEYWORDS)
+
+
+# ----------------------------- extraction -----------------------------------
+
+
+def extract_from_html(url: str, html: str) -> Tuple[str, Dict[str, str]]:
+    """
+    Returns (page_title, details) from an HTML page.
+    """
+    soup = BeautifulSoup(html, "lxml")
+
+    # title
+    title = (
+        soup.find("h1").get_text(strip=True)
+        if soup.find("h1") else soup.title.get_text(strip=True) if soup.title else ""
+    )
+    title = clean_text(title)
+
+    # Search for labelled fields (deadline, eligibility, budget)
+    text = clean_text(soup.get_text(" "))
+    details = extract_fields_from_text(text)
+
+    # Try table-based extraction
+    for table in soup.find_all("table"):
+        ttext = clean_text(table.get_text(" "))
+        maybe = extract_fields_from_text(ttext)
+        # overlay only if found
+        for k, v in maybe.items():
+            if v != "N/A" and details.get(k, "N/A") == "N/A":
+                details[k] = v
+
+    return title, details
+
+
+def extract_fields_from_text(text: str) -> Dict[str, str]:
+    """
+    Heuristic regex extraction from unstructured text.
+    """
+    details = {
+        "deadline": "N/A",
+        "eligibility": "N/A",
+        "budget": "N/A",
+        "area": "N/A",
+        "recurring": "no",
     }
 
-def merge(a: Dict, b: Dict) -> Dict:
-    out = a.copy()
-    for k, v in b.items():
-        if k == "isRecurring":
-            out[k] = out.get(k) or bool(v)
-            continue
-        if (not out.get(k)) and v:
-            out[k] = v
-        if k == "deadline" and (not out.get("deadline")) and v:
-            out["deadline"] = v
-    if not out.get("url") and b.get("url"):
-        out["url"] = b["url"]
-    return out
-
-def dedupe_merge(rows: List[Dict]) -> List[Dict]:
-    m = {}
-    for r in rows:
-        r = standardize(r)
-        k = record_key(r)
-        if k in m:
-            m[k] = merge(m[k], r)
+    # DEADLINE
+    # find phrase near "deadline" or "last date"
+    m = re.search(r"(deadline|last date)\s*[:\-–]\s*([^\n\r;,.]+)", text, re.I)
+    if not m:
+        m = re.search(r"(apply by|closing date)\s*[:\-–]\s*([^\n\r;,.]+)", text, re.I)
+    if m:
+        candidate = clean_text(m.group(2))
+        dt = try_parse_date(candidate)
+        if dt:
+            details["deadline"] = dt
         else:
-            m[k] = r
-    return list(m.values())
+            details["deadline"] = candidate
 
-# -------- Structured HTML extraction --------
-def grab_from_meta_jsonld(soup: BeautifulSoup) -> Dict:
-    out = {}
-    # <time> tags
-    t = soup.find("time")
-    if t and (t.get("datetime") or t.get_text(strip=True)):
-        out["deadline"] = parse_date_any(t.get("datetime") or t.get_text(strip=True))
+    # ELIGIBILITY
+    m = re.search(r"(eligibility|who can apply)\s*[:\-–]\s*(.+?)(\n|\.|\r|$)", text, re.I)
+    if m:
+        details["eligibility"] = clean_text(m.group(2))
+    else:
+        # try a paragraph after "Eligibility"
+        m2 = re.search(r"eligibility(.{0,12})[:\-–]\s*(.+)", text, re.I)
+        if m2:
+            details["eligibility"] = clean_text(m2.group(2).split(". ")[0])
 
-    # <meta>
-    md = soup.find("meta", attrs={"name": "deadline"}) or soup.find(
-        "meta", attrs={"property": "deadline"}
-    )
-    if md and md.get("content"):
-        out["deadline"] = parse_date_any(md.get("content"))
-
-    # JSON-LD
-    for ld in soup.find_all("script", type="application/ld+json"):
-        try:
-            data = json.loads(ld.string)
-        except Exception:
-            continue
-        items = data if isinstance(data, list) else [data]
-        for it in items:
-            if not isinstance(it, dict):
-                continue
-            for k in ["deadline", "endDate", "validThrough", "dateDue", "applicationDeadline"]:
-                if it.get(k):
-                    out["deadline"] = parse_date_any(it[k])
-            for k in ["name", "headline"]:
-                if not out.get("title") and it.get(k):
-                    out["title"] = it[k]
-    return out
-
-def kv_from_table_like(soup: BeautifulSoup) -> Dict:
-    out = {}
-    # tables
-    for tbl in soup.find_all("table"):
-        for tr in tbl.find_all("tr"):
-            cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
-            if len(cells) < 2:
-                continue
-            key = cells[0].lower()
-            val = " ".join(cells[1:]).strip()
-            if not val:
-                continue
-            if "deadline" in key or "last date" in key or "closing" in key:
-                out.setdefault("deadline", parse_date_any(val))
-            elif "eligibil" in key:
-                out.setdefault("eligibility", val[:600])
-            elif "budget" in key or "funding" in key or "grant amount" in key:
-                out.setdefault("budgetINR", val[:250])
-            elif "area" in key or "research area" in key or "thematic" in key:
-                out.setdefault("area", val[:200])
-    # definition lists
-    for dl in soup.find_all("dl"):
-        dts = dl.find_all("dt")
-        dds = dl.find_all("dd")
-        for dt, dd in zip(dts, dds):
-            k = dt.get_text(" ", strip=True).lower()
-            v = dd.get_text(" ", strip=True)
-            if not v:
-                continue
-            if "deadline" in k or "last date" in k or "closing" in k:
-                out.setdefault("deadline", parse_date_any(v))
-            elif "eligibil" in k:
-                out.setdefault("eligibility", v[:600])
-            elif "budget" in k or "funding" in k:
-                out.setdefault("budgetINR", v[:250])
-            elif "area" in k or "research area" in k or "thematic" in k:
-                out.setdefault("area", v[:200])
-    return out
-
-# -------- Heuristic extraction --------
-def window_heuristics(txt: str) -> Dict:
-    out = {}
-    # deadline
-    for pat in DATE_RE:
-        m = re.search(
-            r"(deadline|last date|closing date|submission(?:\s+deadline)?)"
-            r".{0,80}?(" + pat + ")",
-            txt,
-            flags=re.I | re.S,
-        )
-        if m:
-            out["deadline"] = parse_date_any(m.group(2))
-            break
-    # eligibility
+    # BUDGET / FUNDING
     m = re.search(
-        r"(Eligibility)(?:\s*[:\-]|\s*\n)\s*(.+?)(?:\n[A-Z][^\n]{2,}|Budget|Funding|Area|Scope|Duration|How to apply)",
-        txt,
-        flags=re.I | re.S,
+        r"(budget|funding|amount|grant)\s*[:\-–]\s*([^\n\r;,.]+)",
+        text,
+        re.I,
     )
     if m:
-        out["eligibility"] = re.sub(r"\s+", " ", m.group(2)).strip()[:600]
-    # budget
-    m = re.search(
-        r"(Budget|Funding(?:\s+limit)?|Grant(?:\s+amount)?)"
-        r"(?:\s*[:\-]|\s*\n)\s*(.+?)(?:\n[A-Z][^\n]{2,}|Eligibility|Area|Scope|Duration|How to apply)",
-        txt,
-        flags=re.I | re.S,
-    )
-    if m:
-        out["budgetINR"] = re.sub(r"\s+", " ", m.group(2)).strip()[:250]
-    # area
-    m = re.search(
-        r"(Area|Research Area|Thematic Area)"
-        r"(?:\s*[:\-]|\s*\n)\s*(.+?)(?:\n[A-Z][^\n]{2,}|Eligibility|Budget|Funding|Scope|Duration)",
-        txt,
-        flags=re.I | re.S,
-    )
-    if m:
-        out["area"] = re.sub(r"\s+", " ", m.group(2)).strip()[:200]
-    return out
+        details["budget"] = clean_text(m.group(2))
+    else:
+        # currency mention
+        m2 = re.search(r"(₹|INR|EUR|€|\$|GBP|£)\s?[\d,]+(\.\d+)?", text, re.I)
+        if m2:
+            details["budget"] = clean_text(m2.group(0))
 
-# -------- AI extraction (optional) --------
-def ai_extract(text_blob: str) -> Dict:
-    """Optional AI extractor. Only used if OPENAI_API_KEY is present."""
-    if not _AI_CLIENT or not text_blob.strip():
-        return {}
-    prompt = (
-        "You are given raw text from a funding call webpage or PDF. "
-        "Extract the following fields in JSON with keys: "
-        "title, deadline (YYYY-MM-DD), eligibility, budgetINR, area. "
-        "If unknown, return empty string for a field. Keep it concise.\n\n"
-        f"TEXT:\n{text_blob[:MAX_AI_CHARS]}\n"
-    )
+    # AREA / field: look for common disciplines
+    area = detect_area(text)
+    if area:
+        details["area"] = area
+
+    # RECURRING
+    if re.search(r"\b(annual|every year|rolling|ongoing)\b", text, re.I):
+        details["recurring"] = "yes"
+
+    return details
+
+
+def try_parse_date(s: str) -> Optional[str]:
     try:
-        resp = _AI_CLIENT.chat.completions.create(
+        # normalize ordinal suffixes
+        s = re.sub(r"(\d)(st|nd|rd|th)", r"\1", s)
+        dt = dateparser.parse(s, dayfirst=True, fuzzy=True)
+        if dt:
+            return dt.strftime("%Y-%m-%d")
+    except Exception:
+        return None
+    return None
+
+
+def detect_area(text: str) -> Optional[str]:
+    # Very coarse mapping
+    m = text.lower()
+    if any(x in m for x in ["medical", "health", "biomedical", "medicine"]):
+        return "Medical Research"
+    if any(x in m for x in ["biotech", "biotechnology"]):
+        return "Biotechnology"
+    if any(x in m for x in ["physics", "physical science"]):
+        return "Physical Sciences"
+    if any(x in m for x in ["chemistry", "chemical"]):
+        return "Chemical Sciences"
+    if any(x in m for x in ["engineering", "technology"]):
+        return "Science & Technology"
+    if any(x in m for x in ["advanced materials", "materials"]):
+        return "Advanced Materials"
+    if any(x in m for x in ["innovation"]):
+        return "Science & Innovation"
+    return None
+
+
+def extract_from_pdf_bytes(b: bytes) -> Tuple[str, Dict[str, str]]:
+    """
+    Extracts text from PDF bytes and runs heuristic extraction.
+    Title is first line (best-effort).
+    """
+    text = ""
+    if "pdfplumber" in PDF_BACKENDS:
+        with pdfplumber.open(io_bytes(b)) as pdf:
+            for page in pdf.pages[:8]:
+                text += "\n" + (page.extract_text() or "")
+    elif "pypdf2" in PDF_BACKENDS:
+        from io import BytesIO
+        reader = PdfReader(BytesIO(b))
+        for page in reader.pages[:8]:
+            try:
+                text += "\n" + (page.extract_text() or "")
+            except Exception:
+                pass
+    else:
+        return "", {"deadline": "N/A", "eligibility": "N/A", "budget": "N/A", "area": "N/A", "recurring": "no"}
+
+    text = clean_text(text)
+    lines = [ln for ln in text.splitlines() if clean_text(ln)]
+    title = clean_text(lines[0]) if lines else ""
+    details = extract_fields_from_text(text)
+    return title, details
+
+
+def io_bytes(b: bytes):
+    from io import BytesIO
+    return BytesIO(b)
+
+
+def ai_enrich(text: str) -> Dict[str, str]:
+    """
+    Ask OpenAI to return a compact JSON for fields that are missing.
+    """
+    if not OPENAI_ENABLED:
+        return {}
+
+    prompt = f"""
+Extract the following fields from the research funding call text below.
+Return STRICT JSON with keys: deadline, eligibility, budget, area, recurring.
+For deadline use ISO YYYY-MM-DD if possible else N/A.
+For recurring use "yes" if rolling/annual/ongoing, else "no".
+
+Text:
+{text[:12000]}
+    """.strip()
+
+    try:
+        # gpt-4o-mini is cost-effective; change if needed
+        resp = openai.ChatCompletion.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a precise information extractor."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=300,
         )
-        content = resp.choices[0].message.content.strip()
-        j = re.search(r"\{.*\}", content, flags=re.S)
-        data = json.loads(j.group(0)) if j else json.loads(content)
+        content = resp["choices"][0]["message"]["content"].strip()
+        # Try to extract JSON block
+        m = re.search(r"\{.*\}", content, re.S)
+        if not m:
+            return {}
+        data = json.loads(m.group(0))
         out = {}
-        for k in ["title", "deadline", "eligibility", "budgetINR", "area"]:
-            v = data.get(k, "") if isinstance(data, dict) else ""
-            out[k] = v if isinstance(v, str) else ""
-        out["deadline"] = parse_date_any(out.get("deadline", ""))
+        for k in ("deadline", "eligibility", "budget", "area", "recurring"):
+            v = clean_text(str(data.get(k, "N/A")))
+            out[k] = v if v else "N/A"
         return out
-    except Exception:
+    except Exception as e:
+        log.warning("AI enrich failed: %s", e)
         return {}
 
-# -------- Per-page/pd extraction --------
-def extract_from_page(url: str) -> Dict:
-    soup = http_get(url)
-    txt = page_text(soup)
 
-    base = {"url": url}
+# ----------------------------- crawl & parse --------------------------------
 
-    # 1) Structured
-    s1 = grab_from_meta_jsonld(soup)
-    s2 = kv_from_table_like(soup)
-    merged = merge(base, s1)
-    merged = merge(merged, s2)
 
-    # Title
-    if not merged.get("title"):
-        merged["title"] = pick_title(soup, "")
-
-    # 2) Heuristic on page text
-    h = window_heuristics(txt)
-    merged = merge(merged, h)
-
-    # 3) PDF (first candidate)
-    pdf = ""
-    for a in soup.select("a[href]"):
-        u = urljoin(url, a.get("href"))
-        if is_pdf_url(u):
-            pdf = u
-            break
-    if pdf:
-        ptxt = extract_pdf_text(pdf)
-        ph = window_heuristics(ptxt)
-        # Try AI on PDF text first
-        if OPENAI_API_KEY:
-            pai = ai_extract(ptxt)
-            ph = merge(ph, pai)
-        merged = merge(merged, ph)
-
-    # 4) Optional AI on page text if still missing key fields
-    need_ai = (not merged.get("deadline")) or (not merged.get("eligibility") and not merged.get("budgetINR"))
-    if OPENAI_API_KEY and need_ai:
-        ai = ai_extract(txt)
-        merged = merge(merged, ai)
-
-    return merged
-
-# -------- Discovery --------
-def discover_calls_for_agency(agency: Dict) -> List[Dict]:
-    out = []
-    for start in agency["start_urls"]:
-        try:
-            soup = http_get(start)
-        except Exception as e:
-            print(f"[!] {start}: {e}", file=sys.stderr)
-            continue
-        for a in soup.select("a[href]"):
-            title = a.get_text(" ", strip=True)
-            href = a.get("href")
-            if not title or not href:
-                continue
-            u = urljoin(start, href)
-            t = title.lower()
-            if any(b in t for b in BLOCK):  # skip FAQs/forms/etc.
-                continue
-            if not (any(k in t for k in KEYWORDS) or is_pdf_url(u)):
-                continue
-            # keep domain
-            if urlparse(u).netloc != urlparse(agency["base"]).netloc:
-                continue
-            out.append({"title": title, "url": u})
-    # URL-level dedupe
+def collect_links(listing_url: str, base: str) -> List[Tuple[str, str]]:
+    """
+    From a listing page, collect (title, url) pairs that look like calls.
+    """
+    r = http_get(listing_url)
+    if not r:
+        return []
+    soup = BeautifulSoup(r.text, "lxml")
+    links = []
     seen = set()
-    final = []
-    for r in out:
-        if r["url"] in seen:
+    for a in soup.find_all("a", href=True):
+        txt = clean_text(a.get_text(" "))
+        href = a["href"].strip()
+        href_abs = absolute_url(base, href)
+        key = (txt.lower(), href_abs.split("#")[0])
+        if key in seen:
             continue
-        seen.add(r["url"])
-        final.append(r)
-    return final[:80]
+        if not txt:
+            continue
+        if looks_like_call_text(txt):
+            seen.add(key)
+            links.append((txt, href_abs))
+    return links
 
-def records_for_agency(ag: Dict) -> List[Dict]:
-    results = []
-    calls = discover_calls_for_agency(ag)
-    for itm in calls:
-        try:
-            rec = extract_from_page(itm["url"])
-            # context
-            rec["agency"] = ag["name"]
-            rec["category"] = ag["category"]
-            rec["researchCategory"] = ag["research"]
-            rec["country"] = ag["country"]
-            rec["isRecurring"] = False
-            if not rec.get("title"):
-                rec["title"] = itm["title"]
-            # secondary filter against FAQ-ish titles
-            tl = (rec["title"] or "").lower()
-            if any(b in tl for b in BLOCK):
-                continue
-            print(f"  [+] {ag['name']}: {rec['title'][:90]}")
-            results.append(standardize(rec))
-        except Exception as e:
-            print(f"  [!] {itm['url']}: {e}", file=sys.stderr)
-    return results
 
-def load_existing() -> List[Dict]:
-    if not os.path.exists(OUTPUT_FILE):
-        return []
-    try:
-        with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
-            d = json.load(f)
-            return d if isinstance(d, list) else []
-    except Exception:
-        return []
+def parse_call(agency: str, title_guess: str, url: str) -> Dict[str, str]:
+    """
+    Parse a single call page (HTML or PDF).
+    """
+    title, details = "", {
+        "deadline": "N/A",
+        "eligibility": "N/A",
+        "budget": "N/A",
+        "area": "N/A",
+        "recurring": "no",
+    }
+    text_for_ai = ""
+
+    if is_pdf_link(url):
+        r = http_get(url)
+        if r and r.content:
+            title, details = extract_from_pdf_bytes(r.content)
+            text_for_ai = f"{title}\n\n{clean_text(str(details))}"
+    else:
+        r = http_get(url)
+        if r and r.text:
+            title, details = extract_from_html(url, r.text)
+            soup = BeautifulSoup(r.text, "lxml")
+            text_for_ai = clean_text(soup.get_text(" "))
+
+    # prefer the discovered title or fallback to link text
+    final_title = clean_text(title) or clean_text(title_guess)
+
+    # If missing fields, optionally use AI fallback
+    if OPENAI_ENABLED:
+        needs = any(details.get(k, "N/A") == "N/A" for k in ("deadline", "eligibility", "budget", "area"))
+        if needs and text_for_ai:
+            enriched = ai_enrich(text_for_ai)
+            for k, v in enriched.items():
+                if details.get(k, "N/A") == "N/A" and v and v != "N/A":
+                    details[k] = v
+
+    # Normalize area if any
+    if details.get("area") in [None, "", "N/A"]:
+        maybe = detect_area(text_for_ai)
+        if maybe:
+            details["area"] = maybe
+
+    # final pack
+    out = {
+        "title": final_title if final_title else "N/A",
+        "deadline": details.get("deadline", "N/A"),
+        "funding_agency": agency,
+        "area": details.get("area", "N/A"),
+        "eligibility": details.get("eligibility", "N/A"),
+        "budget": details.get("budget", "N/A"),
+        "website": url,
+        "recurring": details.get("recurring", "no"),
+        "india_related": "yes" if is_probably_indian(agency, text_for_ai) else "no",
+    }
+    return out
+
+
+def dedupe(calls: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """
+    Deduplicate by (title + agency) key.
+    """
+    seen = {}
+    for c in calls:
+        key = norm_key(c.get("title", ""), c.get("funding_agency", ""))
+        if key not in seen:
+            seen[key] = c
+        else:
+            # Prefer the one that has more fields filled
+            def score(x: Dict[str, str]) -> int:
+                return sum(1 for k in ("deadline", "eligibility", "budget", "area") if x.get(k) and x.get(k) != "N/A")
+
+            if score(c) > score(seen[key]):
+                seen[key] = c
+    return list(seen.values())
+
+
+# ----------------------------- main -----------------------------------------
+
 
 def main():
-    rows = []
-    rows.extend([standardize(r) for r in RECURRING])
+    all_calls: List[Dict[str, str]] = []
+    for src in SOURCES:
+        agency = src["agency"]
+        url = src["url"]
+        base = src["base"]
+        log.info("Listing: %s (%s)", agency, url)
+        time.sleep(SLEEP_BETWEEN)
+        pairs = collect_links(url, base)
+        log.info("  found %d candidate links", len(pairs))
 
-    for ag in AGENCIES:
-        print(f"[Agency] {ag['name']}")
-        rows.extend(records_for_agency(ag))
+        for title_guess, href in pairs[:80]:  # safety cap per source
+            try:
+                time.sleep(SLEEP_BETWEEN)
+                call = parse_call(agency, title_guess, href)
+                # filter out junk: very short titles / non-call duplicates
+                if len(call["title"]) < 4:
+                    continue
+                all_calls.append(call)
+            except Exception as e:
+                log.warning("parse_call failed %s -> %s", href, e)
 
-    existing = load_existing()
-    merged = dedupe_merge(existing + rows)
+    clean_calls = dedupe(all_calls)
+    # light sort: upcoming deadlines first (unknown at end)
+    def sortkey(c: Dict[str, str]) -> Tuple[int, str]:
+        d = c.get("deadline", "N/A")
+        if d == "N/A":
+            return (1, "9999-12-31")
+        return (0, d)
+    clean_calls.sort(key=sortkey)
 
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(merged, f, ensure_ascii=False, indent=2)
+    out = {
+        "updated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "calls": clean_calls,
+    }
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    log.info("Wrote %d calls to data.json", len(clean_calls))
 
-    print(f"[✓] saved {len(merged)} calls → {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
