@@ -2,15 +2,11 @@ name: Update data.json (daily)
 
 on:
   schedule:
-    - cron: "30 3 * * *"   # daily 03:30 UTC
+    - cron: "17 0 * * *" # daily at 00:17 UTC
   workflow_dispatch:
 
 permissions:
   contents: write
-
-concurrency:
-  group: update-data
-  cancel-in-progress: false
 
 jobs:
   update-data:
@@ -18,9 +14,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -32,77 +25,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r scraper/requirements.txt
 
-      # Build sources.json from your PDF (if data/agencies.pdf exists).
-      # This avoids needing a separate file in the repo.
-      - name: Build sources.json from agencies.pdf (if present)
-        run: |
-          python - <<'PY'
-          import os, re, json
-          from urllib.parse import urlparse
-          def clean(s): import re; return re.sub(r"\s+"," ", (s or "")).strip()
-          pdf_path = "data/agencies.pdf"
-          if not os.path.exists(pdf_path):
-              print("[build] PDF not found, skipping.")
-              open("sources.json","w").write("[]")
-              raise SystemExit(0)
-          text = ""
-          try:
-              import pdfplumber
-              with pdfplumber.open(pdf_path) as pdf:
-                  for p in pdf.pages:
-                      text += "\n" + (p.extract_text() or "")
-          except Exception:
-              try:
-                  from PyPDF2 import PdfReader
-                  with open(pdf_path,"rb") as f:
-                      r = PdfReader(f)
-                      for p in r.pages:
-                          try: text += "\n" + (p.extract_text() or "")
-                          except: pass
-              except Exception:
-                  pass
-          if not text.strip():
-              print("[build] Could not read PDF text; writing empty sources.json")
-              open("sources.json","w").write("[]"); raise SystemExit(0)
-          lines = [clean(x) for x in text.splitlines()]
-          url_re = re.compile(r"(https?://[^\s)]+)", re.I)
-          out, seen = [], set()
-          for i, ln in enumerate(lines):
-              m = url_re.search(ln); 
-              if not m: continue
-              url = m.group(1).rstrip(").,;]")
-              # nearest non-empty line above -> agency
-              agency = ""
-              j = i-1
-              while j >= 0 and not agency:
-                  if lines[j] and not url_re.search(lines[j]):
-                      agency = lines[j]
-                  j -= 1
-              if not agency:
-                  try: agency = urlparse(url).netloc
-                  except: agency = url
-              base = f"{urlparse(url).scheme}://{urlparse(url).netloc}" if urlparse(url).netloc else url
-              key = (agency.lower(), base.lower())
-              if key in seen: continue
-              seen.add(key)
-              out.append({"agency": agency, "url": url, "base": base})
-          with open("sources.json","w",encoding="utf-8") as f:
-              json.dump(out, f, ensure_ascii=False, indent=2)
-          print(f"[build] Wrote {len(out)} sources to sources.json")
-          PY
-
       - name: Run scraper
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # optional; omit if not using AI fallback
         run: |
           python scraper/scraper.py
 
-      - name: Commit & push if changed
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit & push data.json
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.json sources.json || true
-          git diff --quiet && echo "No changes" || git commit -m "chore: auto-update data.json & sources.json" 
-          git push
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: auto-update data.json ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+            git push
+          else
+            echo "No changes"
+          fi
