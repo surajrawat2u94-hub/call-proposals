@@ -2,188 +2,127 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Call Proposals Management System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <style>
-    body { background:#f7f9fc; }
-    .card { border-radius: 14px; }
-    .table thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
-    .badge-soft { background:#eef2ff; color:#233876; }
-    .sticky-col { position: sticky; left:0; background:#fff; z-index:2; }
+    :root { --bg:#0f172a; --panel:#111827; --ink:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; }
+    html,body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; background:#0b1220; color:var(--ink); }
+    header { padding:18px 20px; border-bottom:1px solid #1f2937; background:var(--panel); position:sticky; top:0; z-index:10; }
+    header h1 { margin:0 0 6px; font-size:20px; }
+    header small { color:var(--muted); }
+    main { max-width:1200px; margin: 18px auto; padding: 0 16px; }
+    .bar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+    input[type=search] { padding:10px 12px; width:320px; border-radius:8px; border:1px solid #283446; background:#0a1424; color:var(--ink); }
+    .pill { padding:8px 12px; background:#0a1424; border:1px solid #283446; border-radius:8px; color:var(--ink); }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    thead th { position:sticky; top:74px; background:#0b1220; color:#9fb3c8; text-align:left; padding:10px 8px; border-bottom:1px solid #1f2937; }
+    tbody td { padding:12px 8px; border-bottom:1px solid #111827; vertical-align:top; }
+    a { color:var(--accent); text-decoration:none; }
+    .muted { color:var(--muted); }
+    .badge { padding:2px 8px; border-radius:999px; border:1px solid #334155; background:#0a1424; color:#9fb3c8; font-size:12px; }
+    .count { margin-left:auto; color:#9fb3c8; }
+    .nowrap { white-space:nowrap; }
   </style>
 </head>
 <body>
-<div class="container py-4">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h3 class="m-0">Call Proposals Management System</h3>
-    <div>
-      <span id="totalCount" class="badge text-bg-secondary me-2">Total 0</span>
-      <button id="exportBtn" class="btn btn-sm btn-primary">Export to CSV</button>
-    </div>
-  </div>
+  <header>
+    <h1>Call Proposals Management System</h1>
+    <small id="ts" class="muted"></small>
+  </header>
 
-  <div class="row g-3">
-    <div class="col-lg-3">
-      <div class="card p-3">
-        <h6 class="mb-3">Current Calls Filters</h6>
-        <div class="form-check mb-2">
-          <input class="form-check-input" type="checkbox" id="futureOnly">
-          <label for="futureOnly" class="form-check-label">Show only future deadlines</label>
-        </div>
-        <div class="form-check mb-3">
-          <input class="form-check-input" type="checkbox" id="indiaOnly">
-          <label for="indiaOnly" class="form-check-label">India-related proposals only</label>
-        </div>
-
-        <input id="search" class="form-control form-control-sm mb-3" placeholder="Search in title, area, agency, eligibility"/>
-
-        <div class="small text-muted">Columns</div>
-        <div class="row gx-2 gy-1 mt-1">
-          <div class="col-6"><div class="form-check"><input class="form-check-input colToggle" data-col="area" checked type="checkbox" id="col-area"><label for="col-area" class="form-check-label small">Area</label></div></div>
-          <div class="col-6"><div class="form-check"><input class="form-check-input colToggle" data-col="eligibility" checked type="checkbox" id="col-elig"><label for="col-elig" class="form-check-label small">Eligibility</label></div></div>
-          <div class="col-6"><div class="form-check"><input class="form-check-input colToggle" data-col="budget" checked type="checkbox" id="col-bud"><label for="col-bud" class="form-check-label small">Budget</label></div></div>
-          <div class="col-6"><div class="form-check"><input class="form-check-input colToggle" data-col="agency" checked type="checkbox" id="col-ag"><label for="col-ag" class="form-check-label small">Funding Agency</label></div></div>
-        </div>
-      </div>
+  <main>
+    <div class="bar">
+      <input id="q" type="search" placeholder="Search title, agency, area, eligibility…"/>
+      <label class="pill"><input id="ind" type="checkbox" />&nbsp; India-related only</label>
+      <span class="count"><span id="n">0</span> results</span>
     </div>
 
-    <div class="col-lg-9">
-      <ul class="nav nav-pills mb-2" id="tabs">
-        <li class="nav-item"><button class="nav-link active" data-tab="current">Current Calls</button></li>
-        <li class="nav-item"><button class="nav-link" data-tab="recurring">Recurring Annual Calls</button></li>
-      </ul>
-
-      <div class="card">
-        <div class="table-responsive" style="max-height: 72vh;">
-          <table class="table align-middle mb-0">
-            <thead class="table-light">
-            <tr>
-              <th class="sticky-col">Title</th>
-              <th>Deadline</th>
-              <th class="col-agency">Funding Agency</th>
-              <th class="col-area">Area</th>
-              <th class="col-eligibility">Eligibility</th>
-              <th class="col-budget">Funding/Budget (INR)</th>
-              <th>Website</th>
-            </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-      </div>
+    <div class="pill" style="margin-bottom:10px;">
+      Columns: &nbsp;
+      <label><input type="checkbox" class="col" data-col="area" checked> Area</label>&nbsp;&nbsp;
+      <label><input type="checkbox" class="col" data-col="eligibility" checked> Eligibility</label>&nbsp;&nbsp;
+      <label><input type="checkbox" class="col" data-col="budget" checked> Funding/Budget</label>
     </div>
-  </div>
-</div>
+
+    <table id="t">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th class="nowrap">Deadline</th>
+          <th>Funding Agency</th>
+          <th class="col-area">Area</th>
+          <th class="col-eligibility">Eligibility</th>
+          <th class="col-budget nowrap">Funding/Budget</th>
+          <th>Website</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
 
 <script>
-const S = sel => document.querySelector(sel);
-const SS = sel => Array.from(document.querySelectorAll(sel));
-let RAW = {updated_utc: "", calls: []};
-let currentTab = 'current';
+(async function () {
+  const res = await fetch('data.json', {cache:'no-store'});
+  const data = await res.json().catch(_ => ({updated_utc:'', calls:[]}));
+  document.getElementById('ts').textContent = data.updated_utc ? ('Updated: ' + data.updated_utc) : '';
 
-function fmt(x){ return x && x.trim() ? x.trim() : 'N/A'; }
+  const tbody = document.querySelector('#t tbody');
+  const q = document.getElementById('q');
+  const ind = document.getElementById('ind');
+  const n = document.getElementById('n');
+  const toggles = document.querySelectorAll('.col');
 
-function load() {
-  fetch('data.json?cache=' + Date.now())
-    .then(r => r.json())
-    .then(data => { RAW = data; render(); })
-    .catch(() => { RAW = {updated_utc:"", calls:[]}; render(); });
-}
-
-function toCSV(rows) {
-  const header = ['Title','Deadline','Funding Agency','Area','Eligibility','Budget','Website'];
-  const lines = [header.join(',')];
-  rows.forEach(r=>{
-    const vals = [r.title,r.deadline,r.funding_agency,r.area,r.eligibility,r.budget,r.website]
-      .map(v => `"${String(v??'').replace(/"/g,'""')}"`);
-    lines.push(vals.join(','));
-  });
-  return lines.join('\n');
-}
-
-function applyFilters() {
-  const q = S('#search').value.toLowerCase();
-  const indiaOnly = S('#indiaOnly').checked;
-  const futureOnly = S('#futureOnly').checked;
-
-  let rows = RAW.calls.slice();
-
-  if (currentTab === 'recurring') {
-    rows = rows.filter(r => (r.recurring||'no').toLowerCase()==='yes');
-  } else {
-    rows = rows.filter(r => (r.recurring||'no').toLowerCase()!=='yes');
-  }
-
-  if (indiaOnly) rows = rows.filter(r => (r.india_related||'no')==='yes');
-
-  if (futureOnly) {
-    const today = new Date().toISOString().slice(0,10);
-    rows = rows.filter(r => r.deadline && r.deadline !== 'N/A' && r.deadline >= today);
-  }
-
-  if (q) {
-    rows = rows.filter(r =>
-      [r.title,r.area,r.funding_agency,r.eligibility]
-        .map(x=>String(x||'').toLowerCase()).some(s=>s.includes(q))
-    );
-  }
-
-  return rows;
-}
-
-function render() {
-  const rows = applyFilters();
-  S('#totalCount').textContent = `Total ${rows.length}`;
-  const tb = S('#tbody');
-  tb.innerHTML = '';
-  rows.forEach(r=>{
+  function row(c) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="sticky-col"><div class="fw-medium">${fmt(r.title)}</div></td>
-      <td><span class="badge rounded-pill ${fmt(r.deadline)!=='N/A'?'text-bg-success':'text-bg-secondary'}">${fmt(r.deadline)}</span></td>
-      <td class="col-agency">${fmt(r.funding_agency)}</td>
-      <td class="col-area">${fmt(r.area)}</td>
-      <td class="col-eligibility">${fmt(r.eligibility)}</td>
-      <td class="col-budget">${fmt(r.budget)}</td>
-      <td><a href="${r.website}" target="_blank" rel="noopener">Visit</a></td>
-    `;
-    tb.appendChild(tr);
-  });
-  // column toggles
-  SS('.colToggle').forEach(chk=>{
-    const show = chk.checked;
-    SS('.col-' + chk.dataset.col).forEach(td=>{
-      td.style.display = show ? '' : 'none';
+      <td><div>${escapeHtml(c.title || 'N/A')}</div></td>
+      <td class="nowrap">${escapeHtml(c.deadline || 'N/A')}</td>
+      <td>${escapeHtml(c.funding_agency || 'N/A')}</td>
+      <td class="col-area">${escapeHtml(c.area || 'N/A')}</td>
+      <td class="col-eligibility">${escapeHtml(c.eligibility || 'N/A')}</td>
+      <td class="col-budget">${escapeHtml(c.budget || 'N/A')}</td>
+      <td>${c.website ? `<a href="${c.website}" target="_blank" rel="noopener">Visit</a>` : 'N/A'}</td>`;
+    return tr;
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  const calls = data.calls || [];
+
+  function apply() {
+    const qv = (q.value || '').toLowerCase();
+    const onlyIN = ind.checked;
+
+    tbody.innerHTML = '';
+    let count = 0;
+    for (const c of calls) {
+      if (onlyIN && (c.india_related !== 'yes')) continue;
+      const hay = (c.title + ' ' + c.funding_agency + ' ' + (c.area||'') + ' ' + (c.eligibility||'')).toLowerCase();
+      if (qv && !hay.includes(qv)) continue;
+      tbody.appendChild(row(c));
+      count++;
+    }
+    n.textContent = count;
+  }
+
+  toggles.forEach(chk => {
+    chk.addEventListener('change', () => {
+      const col = chk.dataset.col;
+      document.querySelectorAll('.col-'+col).forEach(el => {
+        el.style.display = chk.checked ? '' : 'none';
+      });
+    });
+    // initial
+    document.querySelectorAll('.col-'+chk.dataset.col).forEach(el => {
+      el.style.display = chk.checked ? '' : 'none';
     });
   });
-}
 
-S('#search').addEventListener('input', render);
-S('#indiaOnly').addEventListener('change', render);
-S('#futureOnly').addEventListener('change', render);
-SS('.colToggle').forEach(ch=>ch.addEventListener('change', render));
-SS('#tabs .nav-link').forEach(btn=>{
-  btn.addEventListener('click', e=>{
-    SS('#tabs .nav-link').forEach(b=>b.classList.remove('active'));
-    e.currentTarget.classList.add('active');
-    currentTab = e.currentTarget.dataset.tab;
-    render();
-  });
-});
-
-S('#exportBtn').addEventListener('click', ()=>{
-  const rows = applyFilters();
-  const csv = toCSV(rows);
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'calls.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
-
-load();
+  q.addEventListener('input', apply);
+  ind.addEventListener('change', apply);
+  apply();
+})();
 </script>
 </body>
 </html>
