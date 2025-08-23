@@ -4,14 +4,10 @@
   <meta charset="utf-8" />
   <title>Call Proposals Management System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Tailwind (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Nice thin scrollbar for the sidebar */
     .thin-scrollbar::-webkit-scrollbar { width: 8px; }
-    .thin-scrollbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1; border-radius: 999px;
-    }
+    .thin-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
     .thin-scrollbar { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
     .tab-active { border-color: #3b82f6; color:#1f2937; }
     .tab-inactive { border-color: transparent; color:#6b7280; }
@@ -19,7 +15,6 @@
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
-  <!-- Header -->
   <header class="bg-white shadow-sm sticky top-0 z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div class="flex items-center gap-3">
@@ -47,7 +42,7 @@
 
           <div class="mt-4 space-y-3">
             <label class="flex items-start gap-3">
-              <input id="chk-future" type="checkbox" class="mt-1 h-4 w-4 text-blue-600 rounded border-slate-300" checked />
+              <input id="chk-future" type="checkbox" class="mt-1 h-4 w-4 text-blue-600 rounded border-slate-300" />
               <span>
                 <span class="font-medium">Show only future deadlines</span>
                 <span class="block text-sm text-slate-500">(Current tab)</span>
@@ -93,9 +88,8 @@
         </div>
       </aside>
 
-      <!-- Main content -->
+      <!-- Main -->
       <section class="lg:col-span-8 xl:col-span-9">
-        <!-- Tabs -->
         <div class="bg-white rounded-xl shadow-sm p-3">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-3">
@@ -113,7 +107,6 @@
           </div>
         </div>
 
-        <!-- Table -->
         <div class="mt-4 bg-white rounded-xl shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -140,280 +133,141 @@
   </main>
 
   <script>
-    // ---------- Utilities ----------
-    const $ = sel => document.querySelector(sel);
+    const $ = s => document.querySelector(s);
     const todayStr = () => new Date().toISOString().slice(0,10);
 
-    function parseDate(s){
-      // expect YYYY-MM-DD or parseable
-      if(!s) return null;
-      const m = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s) : new Date(Date.parse(s));
-      return isNaN(m) ? null : m;
-    }
-
-    function fmtDate(s){
-      const d = parseDate(s);
-      if(!d) return "N/A";
-      return d.toISOString().slice(0,10);
-    }
-
+    function parseDate(s){ if(!s) return null; const d = /^\d{4}-\d{2}-\d{2}$/.test(s)?new Date(s):new Date(Date.parse(s)); return isNaN(d)?null:d; }
+    function fmtDate(s){ const d=parseDate(s); return d? d.toISOString().slice(0,10) : "N/A"; }
     const showNA = v => (v && String(v).trim() !== "" ? v : "N/A");
 
     function cleanKey(s){ return (s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
     function recordKey(r){ return cleanKey((r.title||"")+"|"+(r.agency||"")); }
 
-    function normalize(r){
-      const t = v => ((v && String(v).trim()) || "");
-      return {
-        title: t(r.title),
-        deadline: t(r.deadline),
-        agency: t(r.agency),
-        area: t(r.area),
-        eligibility: t(r.eligibility),
-        budgetINR: t(r.budgetINR),
-        url: t(r.url),
-        category: t(r.category),
-        researchCategory: t(r.researchCategory),
-        extendedDeadline: t(r.extendedDeadline),
-        country: t(r.country || "Global"),
-        isRecurring: !!r.isRecurring
+    // --- merge-dedupe: prefer non-empty fields and keep deadline/url if any version has it
+    function mergeRecord(a,b){
+      const out = {...a};
+      for(const k of Object.keys(b)){
+        if(k==="isRecurring"){ out[k] = out[k] || !!b[k]; continue; }
+        if((!out[k] || out[k]==="N/A") && b[k]) out[k]=b[k];
+        if(k==="deadline" && !out.deadline && b.deadline) out.deadline=b.deadline;
       }
-    }
-
-    function dedupe(list){
-      const seen = new Set();
-      const out = [];
-      for(const r of list){
-        const key = recordKey(r);
-        if(!seen.has(key)){
-          seen.add(key);
-          out.push(r);
-        }
-      }
+      if(!out.url && b.url) out.url=b.url;
       return out;
     }
-
-    function csvEscape(v){
-      if(v == null) return "";
-      const s = String(v);
-      return /[,"\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    function dedupe(list){
+      const m = {};
+      for(const r of list){
+        const key = recordKey(r);
+        if(!m[key]) m[key] = {...r};
+        else m[key] = mergeRecord(m[key], r);
+      }
+      return Object.values(m);
     }
 
-    function toCSV(rows){
-      const cols = ["title","deadline","agency","area","eligibility","budgetINR","url","category","researchCategory","extendedDeadline","country","isRecurring"];
-      const header = cols.join(",");
-      const lines = rows.map(r => cols.map(c => csvEscape(r[c])).join(","));
-      return [header, ...lines].join("\n");
-    }
-
-    // ---------- State ----------
     let RAW = [];
-    let CURRENT_TAB = "current"; // current | recurring
+    let CURRENT_TAB = "current";
     let SORT = { key: "deadline", dir: "asc" };
 
-    // ---------- UI refs ----------
-    const elSearch = $("#txt-search");
-    const elArea = $("#sel-area");
-    const elAgency = $("#sel-agency");
-    const elCategory = $("#sel-category");
-    const elResearch = $("#sel-research");
-    const elFuture = $("#chk-future");
-    const elIndia = $("#chk-india");
-    const elTotal = $("#lbl-total");
-    const elTbody = $("#tbody");
-    const elEmpty = $("#empty");
-    const tabCurrent = $("#tab-current");
-    const tabRecurring = $("#tab-recurring");
+    const elSearch=$("#txt-search"), elArea=$("#sel-area"), elAgency=$("#sel-agency"),
+          elCategory=$("#sel-category"), elResearch=$("#sel-research"),
+          elFuture=$("#chk-future"), elIndia=$("#chk-india"),
+          elTotal=$("#lbl-total"), elTbody=$("#tbody"), elEmpty=$("#empty"),
+          tabCurrent=$("#tab-current"), tabRecurring=$("#tab-recurring");
 
-    // ---------- Data loading ----------
-    const SAMPLE = [
-      { title:"Centre for Advanced Research (CAR) Proposals", deadline:"2025-09-01", agency:"ICMR (Indian Council of Medical Research)", area:"Medical Research", eligibility:"Medical researchers from Indian institutes", budgetINR:"₹2,00,00,000", url:"https://www.icmr.gov.in/", category:"National", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:false},
-      { title:"SERB Core Research Grant (CRG) – Annual", deadline:"", agency:"ANRF (formerly SERB)", area:"Science & Engineering", eligibility:"Faculty researchers in Indian institutions", budgetINR:"", url:"https://www.serbonline.in/", category:"National", researchCategory:"Research Proposal", extendedDeadline:"", country:"India", isRecurring:true}
-    ];
+    const SAMPLE=[{title:"SERB Core Research Grant (CRG) – Annual",deadline:"",agency:"ANRF (formerly SERB)",area:"Science & Engineering",eligibility:"Faculty researchers in Indian institutions",budgetINR:"",url:"https://www.serbonline.in/",category:"National",researchCategory:"Research Proposal",extendedDeadline:"",country:"India",isRecurring:true}];
 
-    fetch("data.json", {cache:"no-store"})
-      .then(r => r.ok ? r.json() : SAMPLE)
-      .then(json => {
-        const src = Array.isArray(json)&&json.length ? json : SAMPLE;
-        RAW = dedupe(src.map(normalize));
-        initFilters(RAW);
-        render();
+    fetch("data.json",{cache:"no-store"})
+      .then(r=>r.ok?r.json():SAMPLE)
+      .then(j=>{
+        const src = Array.isArray(j)&&j.length? j : SAMPLE;
+        RAW = dedupe(src.map(n=>({
+          title:(n.title||"").trim(), deadline:(n.deadline||"").trim(),
+          agency:(n.agency||"").trim(), area:(n.area||"").trim(),
+          eligibility:(n.eligibility||"").trim(), budgetINR:(n.budgetINR||"").trim(),
+          url:(n.url||"").trim(), category:(n.category||"").trim(),
+          researchCategory:(n.researchCategory||"").trim(),
+          extendedDeadline:(n.extendedDeadline||"").trim(), country:(n.country||"Global").trim(),
+          isRecurring:!!n.isRecurring
+        })));
+        initFilters(RAW); render();
       })
-      .catch(() => {
-        RAW = dedupe(SAMPLE.map(normalize));
-        initFilters(RAW);
-        render();
-      });
+      .catch(()=>{ RAW=dedupe(SAMPLE); initFilters(RAW); render(); });
 
-    // ---------- Filters ----------
-    function uniqueSorted(list, getter){
-      return Array.from(new Set(list.map(getter).filter(Boolean))).sort((a,b)=> a.localeCompare(b));
-    }
-
-    function fillSelect(el, values, label){
-      el.innerHTML = "";
-      const optAll = document.createElement("option");
-      optAll.value = "";
-      optAll.textContent = "All";
-      el.appendChild(optAll);
-      values.forEach(v=>{
-        const o = document.createElement("option");
-        o.value = v; o.textContent = v;
-        el.appendChild(o);
-      });
-      el.setAttribute("data-label", label);
-    }
-
+    function uniqueSorted(list, getter){ return Array.from(new Set(list.map(getter).filter(Boolean))).sort((a,b)=>a.localeCompare(b)); }
+    function fillSelect(el, arr){ el.innerHTML=""; const o=document.createElement("option");o.value="";o.textContent="All";el.appendChild(o); arr.forEach(v=>{const a=document.createElement("option"); a.value=v; a.textContent=v; el.appendChild(a);}); }
     function initFilters(rows){
-      fillSelect(elArea, uniqueSorted(rows, r=>r.area), "Area");
-      fillSelect(elAgency, uniqueSorted(rows, r=>r.agency), "Agency");
-      fillSelect(elCategory, uniqueSorted(rows, r=>r.category), "Category");
-      fillSelect(elResearch, uniqueSorted(rows, r=>r.researchCategory), "Research");
+      fillSelect(elArea, uniqueSorted(rows, r=>r.area));
+      fillSelect(elAgency, uniqueSorted(rows, r=>r.agency));
+      fillSelect(elCategory, uniqueSorted(rows, r=>r.category));
+      fillSelect(elResearch, uniqueSorted(rows, r=>r.researchCategory));
     }
-
-    function matchesIndia(r){
-      // Prefer 'country' if present; otherwise infer from agency
-      if(r.country) return r.country.toLowerCase().includes("india");
-      return /(india|icmr|dbt|dst|serb|anrf|igstc|csir)/i.test(r.agency||"");
-    }
-
-    function isFuture(r){
-      const d = parseDate(r.deadline);
-      if(!d) return false; // treat missing as not future for "future deadlines only"
-      const t = new Date(); t.setHours(0,0,0,0);
-      return d >= t;
-    }
+    function matchesIndia(r){ return (r.country? r.country.toLowerCase().includes("india") : /(india|icmr|dbt|dst|serb|anrf|igstc|csir)/i.test(r.agency||"")); }
+    function isFuture(r){ const d=parseDate(r.deadline); if(!d) return false; const t=new Date(); t.setHours(0,0,0,0); return d>=t; }
 
     function applyFilters(){
-      const search = (elSearch.value||"").toLowerCase().trim();
-      const fArea = elArea.value;
-      const fAgency = elAgency.value;
-      const fCategory = elCategory.value;
-      const fResearch = elResearch.value;
+      const search=(elSearch.value||"").toLowerCase().trim();
+      let rows = RAW.filter(r=> CURRENT_TAB==="recurring" ? r.isRecurring : !r.isRecurring);
+      if(elIndia.checked) rows=rows.filter(matchesIndia);
+      if(elFuture.checked && CURRENT_TAB==="current") rows=rows.filter(isFuture);
+      if(search){ rows=rows.filter(r=>[r.title,r.area,r.agency,r.eligibility].join(" ").toLowerCase().includes(search)); }
+      if(elArea.value) rows=rows.filter(r=>r.area===elArea.value);
+      if(elAgency.value) rows=rows.filter(r=>r.agency===elAgency.value);
+      if(elCategory.value) rows=rows.filter(r=>r.category===elCategory.value);
+      if(elResearch.value) rows=rows.filter(r=>r.researchCategory===elResearch.value);
 
-      let rows = RAW.filter(r => CURRENT_TAB === "recurring" ? r.isRecurring : !r.isRecurring);
-
-      if(elIndia.checked) rows = rows.filter(matchesIndia);
-      if(elFuture.checked && CURRENT_TAB === "current") rows = rows.filter(isFuture);
-
-      if(search){
-        rows = rows.filter(r => {
-          const hay = [r.title, r.area, r.agency, r.eligibility].join(" ").toLowerCase();
-          return hay.includes(search);
-        });
-      }
-      if(fArea) rows = rows.filter(r => r.area === fArea);
-      if(fAgency) rows = rows.filter(r => r.agency === fAgency);
-      if(fCategory) rows = rows.filter(r => r.category === fCategory);
-      if(fResearch) rows = rows.filter(r => r.researchCategory === fResearch);
-
-      // sort
-      const key = SORT.key;
-      const dir = SORT.dir === "asc" ? 1 : -1;
-
+      const key=SORT.key, dir=SORT.dir==="asc"?1:-1;
       rows.sort((a,b)=>{
-        const va = (key==="deadline") ? (parseDate(a[key]) || new Date("9999-12-31")) : (a[key]||"").toLowerCase();
-        const vb = (key==="deadline") ? (parseDate(b[key]) || new Date("9999-12-31")) : (b[key]||"").toLowerCase();
-        if(va<vb) return -1*dir;
-        if(va>vb) return  1*dir;
-        return 0;
+        const va=(key==="deadline")?(parseDate(a[key])||new Date("9999-12-31")):(a[key]||"").toLowerCase();
+        const vb=(key==="deadline")?(parseDate(b[key])||new Date("9999-12-31")):(b[key]||"").toLowerCase();
+        if(va<vb) return -1*dir; if(va>vb) return 1*dir; return 0;
       });
-
       return rows;
     }
 
-    // ---------- Render ----------
     function render(){
       const rows = applyFilters();
       elTotal.textContent = rows.length;
-      elTbody.innerHTML = "";
-      elEmpty.classList.toggle("hidden", rows.length>0);
-
+      elTbody.innerHTML=""; elEmpty.classList.toggle("hidden", rows.length>0);
       for(const r of rows){
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-          <td class="px-4 py-3">
-            <div class="font-medium text-slate-800">${showNA(r.title)}</div>
-            <div class="text-xs text-slate-400 md:hidden">${showNA(r.agency)}</div>
-          </td>
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td class="px-4 py-3"><div class="font-medium">${showNA(r.title)}</div><div class="text-xs text-slate-400 md:hidden">${showNA(r.agency)}</div></td>
           <td class="px-4 py-3">${fmtDate(r.deadline)}</td>
           <td class="px-4 py-3 hidden md:table-cell">${showNA(r.agency)}</td>
           <td class="px-4 py-3">${showNA(r.area)}</td>
           <td class="px-4 py-3 hidden md:table-cell">${showNA(r.eligibility)}</td>
           <td class="px-4 py-3 hidden lg:table-cell">${showNA(r.budgetINR)}</td>
-          <td class="px-4 py-3">
-            ${r.url ? `<a class="text-blue-600 hover:underline" href="${r.url}" target="_blank" rel="noopener">Visit Website</a>` : "N/A"}
-          </td>
-        `;
+          <td class="px-4 py-3">${r.url?`<a class="text-blue-600 hover:underline" href="${r.url}" target="_blank" rel="noopener">Visit Website</a>`:"N/A"}</td>`;
         elTbody.appendChild(tr);
       }
     }
 
-    // ---------- Events ----------
     elSearch.addEventListener("input", render);
-    [elArea, elAgency, elCategory, elResearch].forEach(el => el.addEventListener("change", render));
-    elFuture.addEventListener("change", render);
-    elIndia.addEventListener("change", render);
-    $("#btn-reset").addEventListener("click", () => {
-      elSearch.value = "";
-      elArea.value = "";
-      elAgency.value = "";
-      elCategory.value = "";
-      elResearch.value = "";
-      elFuture.checked = true;
-      elIndia.checked = true;
-      SORT = { key: "deadline", dir: "asc" };
-      render();
+    [elArea, elAgency, elCategory, elResearch].forEach(el=>el.addEventListener("change", render));
+    elFuture.addEventListener("change", render); elIndia.addEventListener("change", render);
+
+    $("#btn-reset").addEventListener("click", ()=>{
+      elSearch.value=""; elArea.value=""; elAgency.value=""; elCategory.value=""; elResearch.value="";
+      elFuture.checked=false; elIndia.checked=true; SORT={key:"deadline",dir:"asc"}; render();
     });
 
-    // Sorting by clicking table headers
     document.querySelectorAll(".thead th[data-sort]").forEach(th=>{
       th.addEventListener("click", ()=>{
-        const k = th.getAttribute("data-sort");
-        if(SORT.key === k){
-          SORT.dir = (SORT.dir === "asc") ? "desc" : "asc";
-        } else {
-          SORT = { key: k, dir: "asc" };
-        }
+        const k=th.getAttribute("data-sort");
+        SORT = (SORT.key===k)? {key:k,dir:(SORT.dir==="asc"?"desc":"asc")} : {key:k,dir:"asc"};
         render();
       });
     });
 
-    // Tabs
-    tabCurrent.addEventListener("click", ()=>{
-      CURRENT_TAB = "current";
-      tabCurrent.classList.add("tab-active"); tabCurrent.classList.remove("tab-inactive");
-      tabRecurring.classList.add("tab-inactive"); tabRecurring.classList.remove("tab-active");
-      // Future deadlines checkbox only meaningful for current tab
-      elFuture.parentElement.classList.remove("opacity-50");
-      elFuture.disabled = false;
-      render();
-    });
-    tabRecurring.addEventListener("click", ()=>{
-      CURRENT_TAB = "recurring";
-      tabRecurring.classList.add("tab-active"); tabRecurring.classList.remove("tab-inactive");
-      tabCurrent.classList.add("tab-inactive"); tabCurrent.classList.remove("tab-active");
-      // Disable 'future only' for recurring
-      elFuture.checked = false;
-      elFuture.disabled = true;
-      elFuture.parentElement.classList.add("opacity-50");
-      render();
-    });
+    tabCurrent.addEventListener("click", ()=>{ CURRENT_TAB="current"; tabCurrent.classList.add("tab-active"); tabCurrent.classList.remove("tab-inactive"); tabRecurring.classList.add("tab-inactive"); tabRecurring.classList.remove("tab-active"); elFuture.disabled=false; render(); });
+    tabRecurring.addEventListener("click", ()=>{ CURRENT_TAB="recurring"; tabRecurring.classList.add("tab-active"); tabRecurring.classList.remove("tab-inactive"); tabCurrent.classList.add("tab-inactive"); tabCurrent.classList.remove("tab-active"); elFuture.checked=false; elFuture.disabled=true; render(); });
 
-    // Export CSV
     $("#btn-export").addEventListener("click", ()=>{
-      const rows = applyFilters();
-      const csv = toCSV(rows);
-      const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "calls_export.csv";
-      document.body.appendChild(a);
-      a.click();
-      URL.revokeObjectURL(url);
-      a.remove();
+      const rows=applyFilters();
+      const cols=["title","deadline","agency","area","eligibility","budgetINR","url","category","researchCategory","extendedDeadline","country","isRecurring"];
+      const header=cols.join(","), lines=rows.map(r=>cols.map(c=>{const s=String(r[c]??"");return /[,"\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;}).join(","));
+      const csv=[header,...lines].join("\n"); const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+      const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="calls_export.csv"; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
     });
   </script>
 </body>
