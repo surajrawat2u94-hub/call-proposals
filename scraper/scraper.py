@@ -1,128 +1,109 @@
 #!/usr/bin/env python3
 """
-Scrape funding calls from multiple agencies and merge into data.json
+Scrape funding calls from multiple agencies:
+- discover call links from agency landing pages (keywords-based)
+- extract fields from web page text
+- if a PDF is linked, fetch it and extract the same fields; merge results
+- dedupe by (title + agency) and prefer non-empty values
+- write/merge data.json
 
-How you extend:
-- Add a new `fetch_<agency>()` function that returns a list[dict] of calls.
-- Each call should map to the `STANDARD_FIELDS` keys (any missing values
-  can be '', None, or omitted; they will be normalized to N/A by the UI).
-- Register the adapter in ADAPTERS at the bottom of the file.
-
-Run locally:
+Run:
   python scraper.py
-
-This file is used by GitHub Actions (update-data.yml) to refresh data.json daily.
+Used by GitHub Actions to refresh data.json daily.
 """
 
 import json
 import os
 import re
 import sys
+from io import BytesIO
 from typing import Dict, List
-from urllib.parse import urljoin
+from urllib.parse import urlparse, urljoin
 
 import requests
 from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
+from pdfminer.high_level import extract_text as pdf_extract_text
 
-# ------------- Settings -------------
+# ------------------ Settings ------------------
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_FILE = os.path.join(REPO_ROOT, "data.json")
 TIMEOUT = 40
+PDF_MAX_BYTES = 12 * 1024 * 1024  # 12 MB cap per PDF (safety)
+
 HEADERS = {
-    "User-Agent": "FundingCallsBot/1.0 (+https://github.com/)",
+    "User-Agent": "FundingCallsBot/1.2 (+https://github.com/)",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
 
-STANDARD_FIELDS = [
-    "title", "deadline", "agency", "area", "eligibility", "budgetINR",
-    "url", "category", "researchCategory", "extendedDeadline",
-    "country", "isRecurring"
+# Where we start crawling for each agency
+AGENCIES = [
+    {
+        "name": "ICMR (Indian Council of Medical Research)",
+        "country": "India",
+        "category": "National",
+        "research": "Research Proposal",
+        "base": "https://www.icmr.gov.in/",
+        "start_urls": [
+            "https://www.icmr.gov.in/Pages/Opportunities/Opportunities_Grants.html",
+            "https://www.icmr.gov.in/Pages/ICMR_Announcement.html",
+        ],
+    },
+    {
+        "name": "DBT (Department of Biotechnology)",
+        "country": "India",
+        "category": "National",
+        "research": "Research Proposal",
+        "base": "https://dbtindia.gov.in/",
+        "start_urls": [
+            "https://dbtindia.gov.in/whats-new",
+            "https://dbtindia.gov.in/call-for-proposals",
+        ],
+    },
+    {
+        "name": "DST (Department of Science & Technology)",
+        "country": "India",
+        "category": "National",
+        "research": "Research Proposal",
+        "base": "https://dst.gov.in/",
+        "start_urls": [
+            "https://dst.gov.in/call-for-proposals",
+            "https://dst.gov.in/funding",
+        ],
+    },
+    {
+        "name": "IGSTC (Indo-German Science Technology Centre)",
+        "country": "India",
+        "category": "Joint Collaboration",
+        "research": "Research Proposal",
+        "base": "https://www.igstc.org/",
+        "start_urls": [
+            "https://www.igstc.org/",
+            "https://www.igstc.org/funding-opportunities",
+        ],
+    },
+    # Demo international sources to ensure you always see content:
+    {
+        "name": "European Research Council",
+        "country": "Global",
+        "category": "International",
+        "research": "Research Proposal",
+        "base": "https://erc.europa.eu/",
+        "start_urls": ["https://erc.europa.eu/news-events/news"],
+    },
+    {
+        "name": "NIH",
+        "country": "Global",
+        "category": "International",
+        "research": "Research Proposal",
+        "base": "https://grants.nih.gov/",
+        "start_urls": ["https://grants.nih.gov/funding/searchguide/nih-guide-to-grants-and-contracts.cfm"],
+    },
 ]
 
-# ------------- Utilities -------------
-
-def http_get(url: str) -> BeautifulSoup:
-    r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
-    r.raise_for_status()
-    return BeautifulSoup(r.text, "lxml")
-
-def text(el) -> str:
-    return re.sub(r"\s+", " ", el.get_text(strip=True)) if el else ""
-
-def t(s: str) -> str:
-    """normalize whitespace in strings"""
-    return re.sub(r"\s+", " ", (s or "").strip())
-
-def parse_date_any(s: str) -> str:
-    """Return YYYY-MM-DD or '' if we cannot parse"""
-    s = (s or "").strip()
-    if not s:
-        return ""
-    try:
-        dt = dateparser.parse(s, dayfirst=False, fuzzy=True)
-        return dt.strftime("%Y-%m-%d")
-    except Exception:
-        return ""
-
-def clean_key(s: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
-
-def record_key(r: Dict) -> tuple:
-    """Dedupe by normalized (title + agency); ignore url."""
-    return (clean_key(r.get("title")), clean_key(r.get("agency")))
-
-def standardize(raw: Dict) -> Dict:
-    """Ensure all expected fields exist (even if empty)."""
-    out = {k: "" for k in STANDARD_FIELDS}
-    out.update(raw or {})
-    # normalize booleans / strings
-    out["title"] = t(out.get("title"))
-    out["agency"] = t(out.get("agency"))
-    out["area"] = t(out.get("area"))
-    out["eligibility"] = t(out.get("eligibility"))
-    out["budgetINR"] = t(out.get("budgetINR"))
-    out["url"] = t(out.get("url"))
-    out["category"] = t(out.get("category"))
-    out["researchCategory"] = t(out.get("researchCategory"))
-    out["extendedDeadline"] = parse_date_any(out.get("extendedDeadline") or "")
-    out["deadline"] = parse_date_any(out.get("deadline") or "")
-    out["country"] = t(out.get("country") or "Global")
-    out["isRecurring"] = bool(out.get("isRecurring", False))
-    return out
-
-def load_existing() -> List[Dict]:
-    if not os.path.exists(OUTPUT_FILE):
-        return []
-    try:
-        with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return data if isinstance(data, list) else []
-    except Exception:
-        return []
-
-def merge(existing: List[Dict], new: List[Dict]) -> List[Dict]:
-    """
-    Dedupe by (title+agency). New records override old ones with same key.
-    """
-    bykey = {record_key(standardize(r)): standardize(r) for r in existing}
-    for r in new:
-        rr = standardize(r)
-        bykey[record_key(rr)] = rr
-    merged = list(bykey.values())
-
-    def sort_key(r):
-        # Put no-deadline items at the end; then by title
-        d = r.get("deadline") or "9999-12-31"
-        return (d, r.get("title", ""))
-    merged.sort(key=sort_key)
-    return merged
-
-# ------------- Adapters -------------
-
-def fetch_serb_recurring() -> List[Dict]:
-    """ANRF/SERB – recurring Core Research Grant (CRG)."""
-    return [standardize({
+# Recurring call (example)
+RECURRING = [
+    {
         "title": "SERB Core Research Grant (CRG) – Annual",
         "deadline": "",
         "agency": "ANRF (formerly SERB)",
@@ -134,249 +115,279 @@ def fetch_serb_recurring() -> List[Dict]:
         "researchCategory": "Research Proposal",
         "extendedDeadline": "",
         "country": "India",
-        "isRecurring": True
-    })]
-
-def fetch_horizon_europe_demo() -> List[Dict]:
-    return [standardize({
-        "title":"Horizon Europe Collaborative Projects",
-        "deadline":"2025-11-15",
-        "agency":"European Commission",
-        "area":"Multidisciplinary",
-        "eligibility":"Universities, research orgs, SMEs",
-        "budgetINR":"€ variable",
-        "url":"https://research-and-innovation.ec.europa.eu/",
-        "category":"International",
-        "researchCategory":"Research Proposal",
-        "extendedDeadline":"",
-        "country":"Global",
-        "isRecurring": False
-    })]
-
-def fetch_nih_r01_demo() -> List[Dict]:
-    return [standardize({
-        "title":"NIH R01 Research Project Grant",
-        "deadline":"2025-10-05",
-        "agency":"NIH",
-        "area":"Biomedical",
-        "eligibility":"International collaborators allowed via rules",
-        "budgetINR":"$ variable",
-        "url":"https://grants.nih.gov/grants/funding/r01.htm",
-        "category":"International",
-        "researchCategory":"Research Proposal",
-        "extendedDeadline":"",
-        "country":"Global",
-        "isRecurring": False
-    })]
-
-# ---------- TEMPLATES YOU FILL (replace URL + CSS selectors) ----------
-
-def fetch_icmr_current() -> List[Dict]:
-    """
-    ICMR – Calls/Grants page scraper (TEMPLATE).
-    1) Open the official ICMR 'Calls/Grants' page.
-    2) Right click → Inspect → find the container for each call card.
-    3) Replace the selectors below.
-    """
-    URL = "https://www.icmr.gov.in/"  # TODO: put the calls listing URL here
-    out: List[Dict] = []
-    try:
-        soup = http_get(URL)
-
-        # TODO: Replace '.call-card' with the real container for each call.
-        for card in soup.select(".call-card"):
-            # TODO: Replace these with real selectors:
-            a = card.select_one("a")  # title link
-            title = text(a) or text(card.select_one(".title"))
-            href = urljoin(URL, a.get("href") if a and a.has_attr("href") else "")
-
-            deadline = text(card.select_one(".deadline"))  # e.g., "31 Oct 2025"
-            area = text(card.select_one(".area"))
-            eligibility = text(card.select_one(".eligibility"))
-            budget = text(card.select_one(".budget"))
-
-            # Skip obvious junk
-            if not title or not href:
-                continue
-
-            out.append(standardize({
-                "title": title,
-                "deadline": deadline,        # will be parsed
-                "agency": "ICMR (Indian Council of Medical Research)",
-                "area": area,
-                "eligibility": eligibility,
-                "budgetINR": budget,
-                "url": href,
-                "category": "National",
-                "researchCategory": "Research Proposal",
-                "extendedDeadline": "",
-                "country": "India",
-                "isRecurring": False
-            }))
-        return out
-    except Exception as e:
-        print("ICMR adapter failed:", e, file=sys.stderr)
-        return []
-
-def fetch_dbt_current() -> List[Dict]:
-    """
-    DBT – Calls page scraper (TEMPLATE). Fill selectors like above.
-    """
-    URL = "https://dbtindia.gov.in/"  # TODO: calls listing URL
-    out: List[Dict] = []
-    try:
-        soup = http_get(URL)
-
-        for card in soup.select(".views-row"):  # example
-            a = card.select_one("a")
-            title = text(a)
-            href = urljoin(URL, a.get("href") if a and a.has_attr("href") else "")
-
-            deadline = text(card.select_one(".field-deadline"))
-            area = text(card.select_one(".field-area"))
-            eligibility = text(card.select_one(".field-eligibility"))
-            budget = text(card.select_one(".field-budget"))
-
-            if not title or not href:
-                continue
-            if any(x in title.lower() for x in ["faq", "form", "project", "projects"]):
-                continue
-
-            out.append(standardize({
-                "title": title,
-                "deadline": deadline,
-                "agency": "DBT (Department of Biotechnology)",
-                "area": area,
-                "eligibility": eligibility,
-                "budgetINR": budget,
-                "url": href,
-                "category": "National",
-                "researchCategory": "Research Proposal",
-                "extendedDeadline": "",
-                "country": "India",
-                "isRecurring": False
-            }))
-        return out
-    except Exception as e:
-        print("DBT adapter failed:", e, file=sys.stderr)
-        return []
-
-def fetch_dst_current() -> List[Dict]:
-    """
-    DST – Calls page scraper (TEMPLATE). Fill selectors like above.
-    """
-    URL = "https://dst.gov.in/"  # TODO: calls listing URL
-    out: List[Dict] = []
-    try:
-        soup = http_get(URL)
-
-        for card in soup.select(".call-card"):  # TODO
-            a = card.select_one("a")
-            title = text(a) or text(card.select_one(".title"))
-            href = urljoin(URL, a.get("href") if a and a.has_attr("href") else "")
-
-            deadline = text(card.select_one(".deadline"))
-            area = text(card.select_one(".area"))
-            eligibility = text(card.select_one(".eligibility"))
-            budget = text(card.select_one(".budget"))
-
-            if not title or not href:
-                continue
-            if any(x in title.lower() for x in ["faq", "form", "project", "projects"]):
-                continue
-
-            out.append(standardize({
-                "title": title,
-                "deadline": deadline,
-                "agency": "DST (Department of Science & Technology)",
-                "area": area,
-                "eligibility": eligibility,
-                "budgetINR": budget,
-                "url": href,
-                "category": "National",
-                "researchCategory": "Research Proposal",
-                "extendedDeadline": "",
-                "country": "India",
-                "isRecurring": False
-            }))
-        return out
-    except Exception as e:
-        print("DST adapter failed:", e, file=sys.stderr)
-        return []
-
-def fetch_igstc_current() -> List[Dict]:
-    """
-    IGSTC – Stricter parser to avoid FAQs/forms/projects (TEMPLATE).
-    Replace URL + selectors to point to the actual 'Calls' page.
-    """
-    URL = "https://www.igstc.org/"  # TODO: calls listing URL
-    out: List[Dict] = []
-    ALLOW = ["call", "call for", "proposal"]         # keep
-    BLOCK = ["faq", "form", "scheme form", "forms", "project", "projects"]  # skip
-
-    try:
-        soup = http_get(URL)
-
-        # TODO: Replace with the container that lists calls:
-        for a in soup.select("a"):
-            title = text(a)
-            href = urljoin(URL, a.get("href") if a and a.has_attr("href") else "")
-            if not title or not href:
-                continue
-            tl = title.lower()
-            if any(b in tl for b in BLOCK):
-                continue
-            if not any(w in tl for w in ALLOW):
-                continue
-
-            out.append(standardize({
-                "title": title,
-                "deadline": "",
-                "agency": "IGSTC (Indo-German Science Technology Centre)",
-                "area": "Joint Collaboration",
-                "eligibility": "",
-                "budgetINR": "",
-                "url": href,
-                "category": "Joint Collaboration",
-                "researchCategory": "Research Proposal",
-                "extendedDeadline": "",
-                "country": "India",
-                "isRecurring": False
-            }))
-        return out
-    except Exception as e:
-        print("IGSTC adapter failed:", e, file=sys.stderr)
-        return []
-
-# ---------------- Register the adapters you want to run ----------------
-ADAPTERS = [
-    ("SERB recurring", fetch_serb_recurring),
-    # Fill these once selectors are ready:
-    ("ICMR current", fetch_icmr_current),
-    ("DBT current", fetch_dbt_current),
-    ("DST current", fetch_dst_current),
-    ("IGSTC current", fetch_igstc_current),
-    # demos (safe)
-    ("Horizon Europe demo", fetch_horizon_europe_demo),
-    ("NIH R01 demo", fetch_nih_r01_demo),
+        "isRecurring": True,
+    }
 ]
 
-# ---------------- Main ----------------
+# ------------------ Utilities ------------------
+
+KEYWORDS = ["call", "proposal", "funding opportunity", "fellowship", "grant"]
+BLOCK = ["faq", "form", "application form", "project report", "past project", "tender"]
+
+DATE_PATTERNS = [
+    r"\d{1,2}[/-]\d{1,2}[/-]\d{2,4}",
+    r"\d{4}-\d{2}-\d{2}",
+    r"\d{1,2}\s+(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}",
+]
+
+def http_get(url: str) -> BeautifulSoup:
+    r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+    r.raise_for_status()
+    return BeautifulSoup(r.text, "lxml")
+
+def is_internal(url: str, base: str) -> bool:
+    if not url: return False
+    pu = urlparse(urljoin(base, url))
+    pb = urlparse(base)
+    return pu.netloc == pb.netloc
+
+def full_url(base: str, href: str) -> str:
+    return urljoin(base, href or "")
+
+def text(el) -> str:
+    return re.sub(r"\s+", " ", el.get_text(" ", strip=True)) if el else ""
+
+def clean_all_text(soup: BeautifulSoup) -> str:
+    # page-level text
+    for s in soup(["script","style","noscript","header","footer","nav"]):
+        s.extract()
+    return re.sub(r"\s+", " ", soup.get_text(" ", strip=True))
+
+def parse_date_any(s: str) -> str:
+    s = (s or "").strip()
+    if not s: return ""
+    try:
+        dt = dateparser.parse(s, dayfirst=False, fuzzy=True)
+        return dt.strftime("%Y-%m-%d")
+    except Exception:
+        return ""
+
+def is_pdf_url(url: str) -> bool:
+    return (url or "").lower().split("?")[0].endswith(".pdf")
+
+def fetch_pdf_text(url: str) -> str:
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=TIMEOUT, stream=True)
+        resp.raise_for_status()
+        content = resp.content
+        if len(content) > PDF_MAX_BYTES:
+            return ""
+        return pdf_extract_text(BytesIO(content)) or ""
+    except Exception:
+        return ""
+
+def extract_fields_from_text(txt: str) -> Dict[str, str]:
+    """Heuristic extraction of title/deadline/eligibility/budget/area from big text blobs (web page or PDF)."""
+    out = {"title": "", "deadline": "", "eligibility": "", "budgetINR": "", "area": ""}
+
+    if not txt: return out
+
+    # Title guess: first "call-like" line
+    lines = [l.strip() for l in txt.splitlines() if l.strip()]
+    for l in lines[:60]:
+        ll = l.lower()
+        if any(k in ll for k in ["call for", "call:", "funding opportunity", "invitation", "scheme", "grant", "fellowship"]):
+            out["title"] = l[:180]
+            break
+    if not out["title"] and lines:
+        out["title"] = lines[0][:180]
+
+    # Deadline (find near keywords)
+    for pat in DATE_PATTERNS:
+        m = re.search(r"(deadline|last date|closing date|submission(?:\s+deadline)?)"
+                      r".{0,60}?(" + pat + ")", txt, flags=re.I | re.S)
+        if m:
+            out["deadline"] = parse_date_any(m.group(2))
+            if out["deadline"]: break
+
+    # Eligibility block
+    m = re.search(r"(Eligibility)(?:\s*[:\-]|\s*\n)\s*(.+?)\n(?:[A-Z][^\n]{2,}|Budget|Funding|Area|Scope|Duration|How to apply)",
+                  txt, flags=re.I | re.S)
+    if m:
+        out["eligibility"] = re.sub(r"\s+", " ", m.group(2)).strip()[:600]
+
+    # Budget block
+    m = re.search(r"(Budget|Funding(?:\s+limit)?|Grant(?:\s+amount)?)"
+                  r"(?:\s*[:\-]|\s*\n)\s*(.+?)\n(?:[A-Z][^\n]{2,}|Eligibility|Area|Scope|Duration|How to apply)",
+                  txt, flags=re.I | re.S)
+    if m:
+        out["budgetINR"] = re.sub(r"\s+", " ", m.group(2)).strip()[:250]
+
+    # Area (weak heuristic)
+    m = re.search(r"(Area|Research Area|Thematic Area)(?:\s*[:\-]|\s*\n)\s*(.+?)\n(?:[A-Z][^\n]{2,}|Eligibility|Budget|Funding|Scope|Duration)",
+                  txt, flags=re.I | re.S)
+    if m:
+        out["area"] = re.sub(r"\s+", " ", m.group(2)).strip()[:200]
+
+    return out
+
+def standardize(raw: Dict) -> Dict:
+    def t(v): return (v or "").strip()
+    return {
+        "title": t(raw.get("title")),
+        "deadline": parse_date_any(raw.get("deadline") or ""),
+        "agency": t(raw.get("agency")),
+        "area": t(raw.get("area")),
+        "eligibility": t(raw.get("eligibility")),
+        "budgetINR": t(raw.get("budgetINR")),
+        "url": t(raw.get("url")),
+        "category": t(raw.get("category")),
+        "researchCategory": t(raw.get("researchCategory")),
+        "extendedDeadline": parse_date_any(raw.get("extendedDeadline") or ""),
+        "country": t(raw.get("country") or "Global"),
+        "isRecurring": bool(raw.get("isRecurring", False)),
+    }
+
+def clean_key(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
+
+def record_key(r: Dict) -> str:
+    return clean_key(f"{r.get('title','')}|{r.get('agency','')}")
+
+def merge_record(base: Dict, new: Dict) -> Dict:
+    """Prefer non-empty fields; prefer having deadline; keep URL."""
+    out = base.copy()
+    for k,v in new.items():
+        if k in ("isRecurring",):  # bool cannot be "better"
+            out[k] = out.get(k) or v
+            continue
+        if not out.get(k) and v:
+            out[k] = v
+        # for deadline: prefer one that exists over empty
+        if k == "deadline":
+            if (not out["deadline"]) and v:
+                out["deadline"] = v
+    # always keep a URL
+    if not out.get("url") and new.get("url"):
+        out["url"] = new["url"]
+    return out
+
+def dedupe_merge(rows: List[Dict]) -> List[Dict]:
+    bykey: Dict[str, Dict] = {}
+    for r in rows:
+        r = standardize(r)
+        k = record_key(r)
+        if k in bykey:
+            bykey[k] = merge_record(bykey[k], r)
+        else:
+            bykey[k] = r
+    return list(bykey.values())
+
+def load_existing() -> List[Dict]:
+    if not os.path.exists(OUTPUT_FILE): return []
+    try:
+        with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+# ------------------ Core extraction ------------------
+
+def extract_from_call_page(url: str) -> Dict[str, str]:
+    """Heuristically extract fields from a call page."""
+    soup = http_get(url)
+    page_txt = clean_all_text(soup)
+    web_fields = extract_fields_from_text(page_txt)
+
+    # Title improvement: prefer <h1> or document title
+    h1 = soup.find("h1")
+    if h1 and text(h1):
+        web_fields["title"] = text(h1)
+    elif soup.title and soup.title.string:
+        web_fields["title"] = soup.title.string.strip()
+
+    # Find a linked PDF (first candidate)
+    pdf_url = ""
+    for a in soup.select("a[href]"):
+        href = a.get("href")
+        full = urljoin(url, href)
+        if is_pdf_url(full):
+            pdf_url = full
+            break
+
+    pdf_fields = {}
+    if pdf_url:
+        txt = fetch_pdf_text(pdf_url)
+        if txt:
+            pdf_fields = extract_fields_from_text(txt)
+
+    # Merge and return
+    merged = merge_record(standardize({"url": url}), standardize(web_fields))
+    if pdf_fields:
+        merged = merge_record(merged, standardize(pdf_fields))
+    return merged
+
+def discover_calls(agency: Dict) -> List[Dict]:
+    """Return list of {title, url} discovered from the agency start URLs."""
+    found = []
+    for start in agency["start_urls"]:
+        try:
+            soup = http_get(start)
+        except Exception as e:
+            print(f"[!] Could not open {start}: {e}", file=sys.stderr)
+            continue
+
+        for a in soup.select("a[href]"):
+            title = text(a)
+            href = a.get("href")
+            if not title or not href: continue
+            url = full_url(start, href)
+            t = title.lower()
+            if any(b in t for b in BLOCK):  # skip FAQ/forms/tenders
+                continue
+            if not (any(k in t for k in KEYWORDS) or is_pdf_url(url)):
+                continue
+            # keep same-domain only
+            if not is_internal(url, agency["base"]):
+                continue
+            found.append({"title": title, "url": url})
+    # Rough dedupe by url
+    seen = set(); out=[]
+    for r in found:
+        if r["url"] in seen: continue
+        seen.add(r["url"]); out.append(r)
+    return out[:60]  # safety cap
+
+def build_records_for_agency(agency: Dict) -> List[Dict]:
+    calls = discover_calls(agency)
+    out = []
+    for item in calls:
+        try:
+            rec = extract_from_call_page(item["url"])
+            # attach agency context
+            rec["agency"] = agency["name"]
+            rec["category"] = agency["category"]
+            rec["researchCategory"] = agency["research"]
+            rec["country"] = agency["country"]
+            rec["isRecurring"] = False
+            # fallback to list title if title empty
+            if not rec.get("title"):
+                rec["title"] = item["title"]
+            out.append(standardize(rec))
+            print(f"  [+] {agency['name']}: {rec['title'][:80]}")
+        except Exception as e:
+            print(f"  [!] Failed {item['url']}: {e}", file=sys.stderr)
+    return out
+
+# ------------------ Main ------------------
 
 def main():
+    all_rows: List[Dict] = []
+    # recurring first
+    for r in RECURRING:
+        all_rows.append(standardize(r))
+
+    # agencies
+    for ag in AGENCIES:
+        print(f"[Agency] {ag['name']}")
+        rows = build_records_for_agency(ag)
+        print(f"   -> {len(rows)} calls")
+        all_rows.extend(rows)
+
+    # merge with existing (if you want to keep old calls around)
     existing = load_existing()
-    collected: List[Dict] = []
-
-    for name, fn in ADAPTERS:
-        try:
-            print(f"[+] Fetching: {name}")
-            batch = fn() or []
-            print(f"    -> {len(batch)} items")
-            collected.extend(batch)
-        except Exception as e:
-            print(f"[!] Adapter failed: {name}: {e}", file=sys.stderr)
-
-    merged = merge(existing, collected)
+    merged = dedupe_merge(existing + all_rows)
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(merged, f, ensure_ascii=False, indent=2)
