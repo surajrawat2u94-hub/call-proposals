@@ -1,497 +1,189 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Call Proposals Management System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- TailwindCSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" href="data:image/svg+xml,\
-  <svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2300a6ff%22 stroke-width=%222%22><path d=%22M5 13l4 4L19 7%22/></svg>">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    /* Fixed header scrolling table */
-    .table-wrap { overflow: auto; }
-    table { border-collapse: separate; border-spacing: 0; }
-    thead th { position: sticky; top: 0; background: #f8fafc; z-index: 1; }
-    .badge { @apply px-2 py-0.5 rounded text-xs font-medium; }
+    body { background:#f7f9fc; }
+    .card { border-radius: 14px; }
+    .table thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
+    .badge-soft { background:#eef2ff; color:#233876; }
+    .sticky-col { position: sticky; left:0; background:#fff; z-index:2; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
-  <div class="max-w-7xl mx-auto px-4 py-6">
-    <!-- Header -->
-    <header class="flex items-center gap-3 mb-6">
-      <div class="shrink-0 w-9 h-9 rounded bg-sky-600/10 flex items-center justify-center">
-        <svg class="w-5 h-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 13l4 4L19 7"></path>
-        </svg>
-      </div>
-      <div>
-        <h1 class="text-xl sm:text-2xl font-semibold">Call Proposals Management System</h1>
-        <p class="text-slate-500 text-sm">Filter, sort, export, and explore funding opportunities</p>
-      </div>
-    </header>
-
-    <!-- Main layout: Filters + Content -->
-    <div class="grid lg:grid-cols-[280px_1fr] gap-6">
-      <!-- Filters -->
-      <aside class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-fit">
-        <h2 class="font-semibold text-slate-700 mb-3">Current Calls Filters</h2>
-
-        <label class="flex items-center gap-2 text-sm mb-2">
-          <input id="onlyFuture" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-          <span>Show only future deadlines</span>
-        </label>
-
-        <label class="flex items-center gap-2 text-sm mb-4">
-          <input id="indiaOnly" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-          <span>India-related proposals only</span>
-        </label>
-
-        <div class="mb-4">
-          <label class="text-xs text-slate-500">Search in titles, areas, agencies, or eligibility</label>
-          <input id="q" type="text" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"
-                 placeholder="Type to search…" />
-        </div>
-
-        <div class="mb-3">
-          <label class="text-xs text-slate-500">Filter by Area</label>
-          <select id="areaSel" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"></select>
-        </div>
-        <div class="mb-3">
-          <label class="text-xs text-slate-500">Filter by Funding Agency</label>
-          <select id="agencySel" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"></select>
-        </div>
-        <div class="mb-3">
-          <label class="text-xs text-slate-500">Filter by Category</label>
-          <select id="catSel" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"></select>
-        </div>
-        <div class="mb-3">
-          <label class="text-xs text-slate-500">Filter by Research Category</label>
-          <select id="resCatSel" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"></select>
-        </div>
-
-        <div class="mt-4 border-t pt-4">
-          <h3 class="text-sm font-medium text-slate-700 mb-2">Show / Hide Columns</h3>
-          <div class="space-y-2 text-sm">
-            <label class="flex items-center gap-2">
-              <input type="checkbox" data-col="area" class="col-toggle rounded border-slate-300 text-sky-600" checked />
-              <span>Area</span>
-            </label>
-            <label class="flex items-center gap-2">
-              <input type="checkbox" data-col="eligibility" class="col-toggle rounded border-slate-300 text-sky-600" checked />
-              <span>Eligibility</span>
-            </label>
-            <label class="flex items-center gap-2">
-              <input type="checkbox" data-col="budgetINR" class="col-toggle rounded border-slate-300 text-sky-600" checked />
-              <span>Funding/Budget (INR)</span>
-            </label>
-            <label class="flex items-center gap-2">
-              <input type="checkbox" data-col="category" class="col-toggle rounded border-slate-300 text-sky-600" />
-              <span>Category</span>
-            </label>
-            <label class="flex items-center gap-2">
-              <input type="checkbox" data-col="researchCategory" class="col-toggle rounded border-slate-300 text-sky-600" />
-              <span>Research Category</span>
-            </label>
-          </div>
-        </div>
-
-        <button id="resetBtn" class="mt-4 w-full rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm py-2">
-          Reset filters
-        </button>
-      </aside>
-
-      <!-- Content -->
-      <section class="space-y-4">
-        <!-- Tabs + toolbar -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3">
-          <div class="flex items-center justify-between">
-            <div class="flex gap-1">
-              <button id="tabCurrent"
-                      class="tab-btn px-3 py-2 rounded-lg text-sm font-medium bg-sky-50 text-sky-700 border border-sky-200">
-                Current Calls
-              </button>
-              <button id="tabRecurring"
-                      class="tab-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900">
-                Recurring Annual Calls
-              </button>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <button id="exportCsv"
-                      class="px-3 py-2 rounded-lg text-sm bg-slate-800 text-white hover:bg-slate-900">
-                Export to CSV
-              </button>
-              <div class="text-sm text-slate-600">
-                Total <span id="totalCount" class="font-semibold">0</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
-          <div class="table-wrap">
-            <table id="callsTable" class="min-w-full text-sm">
-              <thead class="text-slate-600">
-                <tr>
-                  <th class="sticky left-0 z-10 bg-slate-50 border-b px-3 py-2 text-left w-[28rem]">Title</th>
-                  <th class="border-b px-3 py-2 text-left">Deadline</th>
-                  <th class="border-b px-3 py-2 text-left w-[16rem]">Funding Agency</th>
-                  <th class="border-b px-3 py-2 text-left col-area">Area</th>
-                  <th class="border-b px-3 py-2 text-left col-eligibility w-[24rem]">Eligibility</th>
-                  <th class="border-b px-3 py-2 text-left col-budgetINR">Funding/Budget (INR)</th>
-                  <th class="border-b px-3 py-2 text-left">Website</th>
-                  <th class="border-b px-3 py-2 text-left col-category">Category</th>
-                  <th class="border-b px-3 py-2 text-left col-researchCategory">Research Category</th>
-                </tr>
-              </thead>
-              <tbody id="tbody" class="divide-y divide-slate-100"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+<body>
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="m-0">Call Proposals Management System</h3>
+    <div>
+      <span id="totalCount" class="badge text-bg-secondary me-2">Total 0</span>
+      <button id="exportBtn" class="btn btn-sm btn-primary">Export to CSV</button>
     </div>
   </div>
 
-  <script>
-    // ---------- Utilities ----------
-    const $ = (sel, ctx=document) => ctx.querySelector(sel);
-    const $$ = (sel, ctx=document) => [...ctx.querySelectorAll(sel)];
-    const NA = v => (v && String(v).trim()) ? String(v).trim() : "N/A";
+  <div class="row g-3">
+    <div class="col-lg-3">
+      <div class="card p-3">
+        <h6 class="mb-3">Current Calls Filters</h6>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" id="futureOnly">
+          <label for="futureOnly" class="form-check-label">Show only future deadlines</label>
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="indiaOnly">
+          <label for="indiaOnly" class="form-check-label">India-related proposals only</label>
+        </div>
 
-    const parseDate = (s) => {
-      if (!s) return null;
-      const t = Date.parse(s);
-      return isNaN(t) ? null : new Date(t);
-    };
-    const fmtDate = (s) => {
-      const d = parseDate(s);
-      if (!d) return "N/A";
-      return d.toISOString().slice(0,10);
-    };
+        <input id="search" class="form-control form-control-sm mb-3" placeholder="Search in title, area, agency, eligibility"/>
 
-    const today = () => new Date().toISOString().slice(0,10);
+        <div class="small text-muted">Columns</div>
+        <div class="row gx-2 gy-1 mt-1">
+          <div class="col-6"><div class="form-check"><input class="form-check-input colToggle" data-col="area" checked type="checkbox" id="col-area"><label for="col-area" class="form-check-label small">Area</label></div></div>
+          <div class="col-6"><div class="form-check"><input class="form-check-input colToggle" data-col="eligibility" checked type="checkbox" id="col-elig"><label for="col-elig" class="form-check-label small">Eligibility</label></div></div>
+          <div class="col-6"><div class="form-check"><input class="form-check-input colToggle" data-col="budget" checked type="checkbox" id="col-bud"><label for="col-bud" class="form-check-label small">Budget</label></div></div>
+          <div class="col-6"><div class="form-check"><input class="form-check-input colToggle" data-col="agency" checked type="checkbox" id="col-ag"><label for="col-ag" class="form-check-label small">Funding Agency</label></div></div>
+        </div>
+      </div>
+    </div>
 
-    const toCSV = (rows, columns) => {
-      const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-      const header = columns.map(c => esc(c.header)).join(",");
-      const lines = rows.map(r => columns.map(c => esc(r[c.key])).join(","));
-      return [header, ...lines].join("\n");
-    };
+    <div class="col-lg-9">
+      <ul class="nav nav-pills mb-2" id="tabs">
+        <li class="nav-item"><button class="nav-link active" data-tab="current">Current Calls</button></li>
+        <li class="nav-item"><button class="nav-link" data-tab="recurring">Recurring Annual Calls</button></li>
+      </ul>
 
-    // ---------- State ----------
-    let DATA = [];
-    let tab = "current"; // or "recurring"
+      <div class="card">
+        <div class="table-responsive" style="max-height: 72vh;">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+              <th class="sticky-col">Title</th>
+              <th>Deadline</th>
+              <th class="col-agency">Funding Agency</th>
+              <th class="col-area">Area</th>
+              <th class="col-eligibility">Eligibility</th>
+              <th class="col-budget">Funding/Budget (INR)</th>
+              <th>Website</th>
+            </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    const els = {
-      onlyFuture: $("#onlyFuture"),
-      indiaOnly: $("#indiaOnly"),
-      q: $("#q"),
-      areaSel: $("#areaSel"),
-      agencySel: $("#agencySel"),
-      catSel: $("#catSel"),
-      resCatSel: $("#resCatSel"),
-      resetBtn: $("#resetBtn"),
-      totalCount: $("#totalCount"),
-      tbody: $("#tbody"),
-      exportCsv: $("#exportCsv"),
-      tabCurrent: $("#tabCurrent"),
-      tabRecurring: $("#tabRecurring"),
-    };
+<script>
+const S = sel => document.querySelector(sel);
+const SS = sel => Array.from(document.querySelectorAll(sel));
+let RAW = {updated_utc: "", calls: []};
+let currentTab = 'current';
 
-    const columns = [
-      { key: "title", header: "Title" },
-      { key: "deadline", header: "Deadline" },
-      { key: "agency", header: "Funding Agency" },
-      { key: "area", header: "Area" },
-      { key: "eligibility", header: "Eligibility" },
-      { key: "budgetINR", header: "Funding/Budget (INR)" },
-      { key: "url", header: "Website" },
-      { key: "category", header: "Category" },
-      { key: "researchCategory", header: "Research Category" },
-    ];
+function fmt(x){ return x && x.trim() ? x.trim() : 'N/A'; }
 
-    const colToggles = $$(".col-toggle");
-    const applyColumnToggles = () => {
-      const on = {};
-      colToggles.forEach(t => { on[t.dataset.col] = t.checked; });
-      // toggle <th> visibility
-      for (const key of ["area","eligibility","budgetINR","category","researchCategory"]) {
-        const show = !!on[key];
-        $$(".col-" + key).forEach(el => {
-          el.style.display = show ? "" : "none";
-        });
-      }
-      // toggle <td> in body
-      $$("#tbody tr").forEach(tr => {
-        for (const key of ["area","eligibility","budgetINR","category","researchCategory"]) {
-          const td = tr.querySelector(`td[data-col="${key}"]`);
-          if (td) td.style.display = on[key] ? "" : "none";
-        }
-      });
-    };
+function load() {
+  fetch('data.json?cache=' + Date.now())
+    .then(r => r.json())
+    .then(data => { RAW = data; render(); })
+    .catch(() => { RAW = {updated_utc:"", calls:[]}; render(); });
+}
 
-    // ---------- Filters ----------
-    const uniqueSorted = (arr) =>
-      [...new Set(arr.filter(Boolean).map(x => String(x).trim()))].sort((a,b)=>a.localeCompare(b));
+function toCSV(rows) {
+  const header = ['Title','Deadline','Funding Agency','Area','Eligibility','Budget','Website'];
+  const lines = [header.join(',')];
+  rows.forEach(r=>{
+    const vals = [r.title,r.deadline,r.funding_agency,r.area,r.eligibility,r.budget,r.website]
+      .map(v => `"${String(v??'').replace(/"/g,'""')}"`);
+    lines.push(vals.join(','));
+  });
+  return lines.join('\n');
+}
 
-    const fillSelect = (sel, values, label="All") => {
-      sel.innerHTML = "";
-      const optAll = document.createElement("option");
-      optAll.value = "";
-      optAll.textContent = label + " (All)";
-      sel.appendChild(optAll);
-      values.forEach(v => {
-        const o = document.createElement("option");
-        o.value = v; o.textContent = v;
-        sel.appendChild(o);
-      });
-    };
+function applyFilters() {
+  const q = S('#search').value.toLowerCase();
+  const indiaOnly = S('#indiaOnly').checked;
+  const futureOnly = S('#futureOnly').checked;
 
-    const buildFacetLists = () => {
-      const use = DATA.filter(r => tab === "recurring" ? r.isRecurring : !r.isRecurring);
-      fillSelect(els.areaSel, uniqueSorted(use.map(r => r.area)));
-      fillSelect(els.agencySel, uniqueSorted(use.map(r => r.agency)), "Agency");
-      fillSelect(els.catSel, uniqueSorted(use.map(r => r.category)), "Category");
-      fillSelect(els.resCatSel, uniqueSorted(use.map(r => r.researchCategory)), "Research Category");
-    };
+  let rows = RAW.calls.slice();
 
-    const matchesIndia = (r) => {
-      const s = `${r.country || ""} ${r.agency || ""} ${r.title || ""}`.toLowerCase();
-      return s.includes("india");
-    };
+  if (currentTab === 'recurring') {
+    rows = rows.filter(r => (r.recurring||'no').toLowerCase()==='yes');
+  } else {
+    rows = rows.filter(r => (r.recurring||'no').toLowerCase()!=='yes');
+  }
 
-    const filterRows = () => {
-      const q = els.q.value.trim().toLowerCase();
-      const area = els.areaSel.value;
-      const ag = els.agencySel.value;
-      const cat = els.catSel.value;
-      const rc = els.resCatSel.value;
+  if (indiaOnly) rows = rows.filter(r => (r.india_related||'no')==='yes');
 
-      let rows = DATA.filter(r => tab === "recurring" ? r.isRecurring : !r.isRecurring);
+  if (futureOnly) {
+    const today = new Date().toISOString().slice(0,10);
+    rows = rows.filter(r => r.deadline && r.deadline !== 'N/A' && r.deadline >= today);
+  }
 
-      if (els.indiaOnly.checked) {
-        rows = rows.filter(matchesIndia);
-      }
+  if (q) {
+    rows = rows.filter(r =>
+      [r.title,r.area,r.funding_agency,r.eligibility]
+        .map(x=>String(x||'').toLowerCase()).some(s=>s.includes(q))
+    );
+  }
 
-      if (els.onlyFuture.checked) {
-        rows = rows.filter(r => {
-          const d = parseDate(r.deadline);
-          return d ? d >= new Date(today()) : false; // keep only with future deadlines
-        });
-      }
+  return rows;
+}
 
-      if (q) {
-        rows = rows.filter(r => {
-          const hay = `${r.title} ${r.area} ${r.agency} ${r.eligibility}`.toLowerCase();
-          return hay.includes(q);
-        });
-      }
-      if (area) rows = rows.filter(r => (r.area||"") === area);
-      if (ag) rows = rows.filter(r => (r.agency||"") === ag);
-      if (cat) rows = rows.filter(r => (r.category||"") === cat);
-      if (rc) rows = rows.filter(r => (r.researchCategory||"") === rc);
-
-      // sort by deadline asc; empty at bottom
-      rows.sort((a,b) => {
-        const da = parseDate(a.deadline);
-        const db = parseDate(b.deadline);
-        if (da && db) return da - db;
-        if (da) return -1;
-        if (db) return 1;
-        return a.title.localeCompare(b.title);
-      });
-
-      return rows;
-    };
-
-    const render = () => {
-      const rows = filterRows();
-      els.totalCount.textContent = rows.length;
-
-      const on = {};
-      colToggles.forEach(t => on[t.dataset.col] = t.checked);
-
-      els.tbody.innerHTML = "";
-      for (const r of rows) {
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-50/60";
-
-        const tdTitle = document.createElement("td");
-        tdTitle.className = "sticky left-0 z-[5] bg-white/90 border-b px-3 py-2";
-        const a = document.createElement("a");
-        a.href = r.url || "#";
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.className = "text-sky-700 hover:text-sky-900";
-        a.textContent = NA(r.title);
-        tdTitle.appendChild(a);
-        tr.appendChild(tdTitle);
-
-        const tdDeadline = document.createElement("td");
-        tdDeadline.className = "border-b px-3 py-2";
-        const dstr = fmtDate(r.deadline);
-        const badge = document.createElement("span");
-        badge.className = "badge " + (dstr !== "N/A" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600");
-        badge.textContent = dstr;
-        tdDeadline.appendChild(badge);
-        tr.appendChild(tdDeadline);
-
-        const tdAgency = document.createElement("td");
-        tdAgency.className = "border-b px-3 py-2";
-        tdAgency.textContent = NA(r.agency);
-        tr.appendChild(tdAgency);
-
-        const tdArea = document.createElement("td");
-        tdArea.dataset.col = "area";
-        tdArea.className = "border-b px-3 py-2 col-area";
-        tdArea.textContent = NA(r.area);
-        tr.appendChild(tdArea);
-
-        const tdElig = document.createElement("td");
-        tdElig.dataset.col = "eligibility";
-        tdElig.className = "border-b px-3 py-2 col-eligibility";
-        tdElig.textContent = NA(r.eligibility);
-        tr.appendChild(tdElig);
-
-        const tdBudget = document.createElement("td");
-        tdBudget.dataset.col = "budgetINR";
-        tdBudget.className = "border-b px-3 py-2 col-budgetINR";
-        tdBudget.textContent = NA(r.budgetINR);
-        tr.appendChild(tdBudget);
-
-        const tdUrl = document.createElement("td");
-        tdUrl.className = "border-b px-3 py-2";
-        if (r.url) {
-          const u = document.createElement("a");
-          u.href = r.url; u.target = "_blank"; u.rel = "noopener";
-          u.className = "text-sky-700 hover:text-sky-900";
-          u.textContent = "Visit";
-          tdUrl.appendChild(u);
-        } else {
-          tdUrl.textContent = "N/A";
-        }
-        tr.appendChild(tdUrl);
-
-        const tdCat = document.createElement("td");
-        tdCat.className = "border-b px-3 py-2 col-category";
-        tdCat.dataset.col = "category";
-        tdCat.textContent = NA(r.category);
-        tr.appendChild(tdCat);
-
-        const tdRes = document.createElement("td");
-        tdRes.className = "border-b px-3 py-2 col-researchCategory";
-        tdRes.dataset.col = "researchCategory";
-        tdRes.textContent = NA(r.researchCategory);
-        tr.appendChild(tdRes);
-
-        els.tbody.appendChild(tr);
-      }
-
-      applyColumnToggles();
-    };
-
-    const resetFilters = () => {
-      els.onlyFuture.checked = false;
-      els.indiaOnly.checked = false;
-      els.q.value = "";
-      els.areaSel.value = "";
-      els.agencySel.value = "";
-      els.catSel.value = "";
-      els.resCatSel.value = "";
-      render();
-    };
-
-    const exportCurrentView = () => {
-      const rows = filterRows();
-      const cols = columns.filter(c => {
-        if (["area","eligibility","budgetINR","category","researchCategory"].includes(c.key)) {
-          const t = colToggles.find(x => x.dataset.col === c.key);
-          return t ? t.checked : true;
-        }
-        return true;
-      });
-      const mapped = rows.map(r => ({
-        title: r.title || "",
-        deadline: fmtDate(r.deadline),
-        agency: r.agency || "",
-        area: r.area || "",
-        eligibility: r.eligibility || "",
-        budgetINR: r.budgetINR || "",
-        url: r.url || "",
-        category: r.category || "",
-        researchCategory: r.researchCategory || "",
-      }));
-      const csv = toCSV(mapped, cols);
-      const blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `calls_${tab}_${new Date().toISOString().slice(0,10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    };
-
-    // ---------- Init ----------
-    async function load() {
-      try {
-        const res = await fetch("data.json", {cache: "no-store"});
-        const data = await res.json();
-        // standardize
-        DATA = (Array.isArray(data) ? data : []).map(r => ({
-          title: r.title || "",
-          deadline: r.deadline || "",
-          agency: r.agency || "",
-          area: r.area || "",
-          eligibility: r.eligibility || "",
-          budgetINR: r.budgetINR || "",
-          url: r.url || "",
-          category: r.category || "",
-          researchCategory: r.researchCategory || "",
-          extendedDeadline: r.extendedDeadline || "",
-          country: r.country || "",
-          isRecurring: !!r.isRecurring,
-        }));
-      } catch (e) {
-        console.error("Failed to load data.json", e);
-        DATA = [];
-      }
-      buildFacetLists();
-      render();
-    }
-
-    // Event wiring
-    ["input","change"].forEach(ev => {
-      els.q.addEventListener(ev, render);
-      els.onlyFuture.addEventListener(ev, render);
-      els.indiaOnly.addEventListener(ev, render);
-      els.areaSel.addEventListener(ev, render);
-      els.agencySel.addEventListener(ev, render);
-      els.catSel.addEventListener(ev, render);
-      els.resCatSel.addEventListener(ev, render);
+function render() {
+  const rows = applyFilters();
+  S('#totalCount').textContent = `Total ${rows.length}`;
+  const tb = S('#tbody');
+  tb.innerHTML = '';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="sticky-col"><div class="fw-medium">${fmt(r.title)}</div></td>
+      <td><span class="badge rounded-pill ${fmt(r.deadline)!=='N/A'?'text-bg-success':'text-bg-secondary'}">${fmt(r.deadline)}</span></td>
+      <td class="col-agency">${fmt(r.funding_agency)}</td>
+      <td class="col-area">${fmt(r.area)}</td>
+      <td class="col-eligibility">${fmt(r.eligibility)}</td>
+      <td class="col-budget">${fmt(r.budget)}</td>
+      <td><a href="${r.website}" target="_blank" rel="noopener">Visit</a></td>
+    `;
+    tb.appendChild(tr);
+  });
+  // column toggles
+  SS('.colToggle').forEach(chk=>{
+    const show = chk.checked;
+    SS('.col-' + chk.dataset.col).forEach(td=>{
+      td.style.display = show ? '' : 'none';
     });
-    els.resetBtn.addEventListener("click", resetFilters);
-    els.exportCsv.addEventListener("click", exportCurrentView);
+  });
+}
 
-    colToggles.forEach(t => t.addEventListener("change", applyColumnToggles));
+S('#search').addEventListener('input', render);
+S('#indiaOnly').addEventListener('change', render);
+S('#futureOnly').addEventListener('change', render);
+SS('.colToggle').forEach(ch=>ch.addEventListener('change', render));
+SS('#tabs .nav-link').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    SS('#tabs .nav-link').forEach(b=>b.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    currentTab = e.currentTarget.dataset.tab;
+    render();
+  });
+});
 
-    // Tabs
-    const activateTabBtn = () => {
-      if (tab === "current") {
-        els.tabCurrent.classList.add("bg-sky-50","text-sky-700","border","border-sky-200");
-        els.tabRecurring.classList.remove("bg-sky-50","text-sky-700","border","border-sky-200");
-        els.tabRecurring.classList.add("text-slate-600");
-      } else {
-        els.tabRecurring.classList.add("bg-sky-50","text-sky-700","border","border-sky-200");
-        els.tabCurrent.classList.remove("bg-sky-50","text-sky-700","border","border-sky-200");
-        els.tabCurrent.classList.add("text-slate-600");
-      }
-    };
-    els.tabCurrent.addEventListener("click", () => { tab = "current"; buildFacetLists(); activateTabBtn(); render(); });
-    els.tabRecurring.addEventListener("click", () => { tab = "recurring"; buildFacetLists(); activateTabBtn(); render(); });
+S('#exportBtn').addEventListener('click', ()=>{
+  const rows = applyFilters();
+  const csv = toCSV(rows);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'calls.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 
-    // Start
-    load().then(activateTabBtn);
-  </script>
+load();
+</script>
 </body>
 </html>
