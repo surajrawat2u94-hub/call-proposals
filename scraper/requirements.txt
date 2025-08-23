@@ -2,6 +2,4 @@ requests
 beautifulsoup4
 lxml
 python-dateutil
-pdfplumber
-PyPDF2
-openai
+PyPDF2    # optional; used only if PDF parsing is possible
