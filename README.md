@@ -31,3 +31,12 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 - Default DB: SQLite at `/workspace/data/cfps.db`
 - Add adapters in `app/adapters/` and register them in `app/ingestion.py`.
+
+## Maintenance
+
+- Enforce unique index and dedupe existing rows:
+```bash
+curl -X POST http://127.0.0.1:8000/maintenance/dedupe
+```
+
+- External IDs are normalized on ingestion to avoid duplicates.

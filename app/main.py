@@ -12,10 +12,16 @@ from .database import engine, Base, get_db_session
 from .models import CallForProposal
 from .schemas import CFPSchema, CFPListResponse, IngestResponse
 from .ingestion import run_ingestion
+from .maintenance import enforce_unique_index, dedupe_cfps
 
 
 # Initialize DB tables
 Base.metadata.create_all(bind=engine)
+# Ensure unique index exists
+try:
+	enforce_unique_index(engine)
+except Exception:
+	pass
 
 app = FastAPI(title="CFP Aggregator")
 
@@ -71,3 +77,9 @@ def list_cfps(
 def ingest(session: Session = Depends(get_db_session)):
 	inserted, updated, sources = run_ingestion(session)
 	return IngestResponse(inserted=inserted, updated=updated, sources=sources)
+
+
+@app.post("/maintenance/dedupe")
+def maintenance_dedupe(session: Session = Depends(get_db_session)):
+	deleted = dedupe_cfps(session)
+	return {"deleted": deleted}

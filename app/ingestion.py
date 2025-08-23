@@ -28,6 +28,10 @@ def compute_fingerprint(item: CFPItem) -> str:
 	return hashlib.sha1(joined.encode("utf-8")).hexdigest()
 
 
+def normalize_external_id(raw: str) -> str:
+	return (raw or "").strip()
+
+
 def default_adapters() -> List[BaseAdapter]:
 	return [GrantsGovAdapter()]
 
@@ -38,17 +42,19 @@ def upsert_items(session: Session, items: Iterable[CFPItem]) -> Tuple[int, int]:
 	for item in items:
 		fingerprint = compute_fingerprint(item)
 
+		normalized_external_id = normalize_external_id(item.external_id)
+
 		existing = session.execute(
 			select(CallForProposal).where(
 				CallForProposal.source == item.source,
-				CallForProposal.external_id == item.external_id,
+				CallForProposal.external_id == normalized_external_id,
 			)
 		).scalar_one_or_none()
 
 		if existing is None:
 			record = CallForProposal(
 				source=item.source,
-				external_id=item.external_id,
+				external_id=normalized_external_id,
 				title=item.title,
 				summary=item.summary,
 				url=item.url,
