@@ -1328,5 +1328,47 @@
     "extendedDeadline": "",
     "country": "Global",
     "isRecurring": false
+  },
+  {
+    "title": "IGSTC Holiday List 2025",
+    "deadline": "",
+    "agency": "IGSTC (Indo-German Science Technology Centre)",
+    "area": "",
+    "eligibility": "",
+    "budgetINR": "",
+    "url": "https://www.igstc.org/public/igstc-home/images/IGSTC-Holiday-List-2025.pdf",
+    "category": "Joint Collaboration",
+    "researchCategory": "Research Proposal",
+    "extendedDeadline": "",
+    "country": "India",
+    "isRecurring": false
+  },
+  {
+    "title": "Funding",
+    "deadline": "",
+    "agency": "NIH",
+    "area": "",
+    "eligibility": "",
+    "budgetINR": "",
+    "url": "https://grants.nih.gov/funding",
+    "category": "International",
+    "researchCategory": "Research Proposal",
+    "extendedDeadline": "",
+    "country": "Global",
+    "isRecurring": false
+  },
+  {
+    "title": "Funding Categories",
+    "deadline": "",
+    "agency": "NIH",
+    "area": "",
+    "eligibility": "",
+    "budgetINR": "",
+    "url": "https://grants.nih.gov/funding/funding-categories",
+    "category": "International",
+    "researchCategory": "Research Proposal",
+    "extendedDeadline": "",
+    "country": "Global",
+    "isRecurring": false
   }
 ]
