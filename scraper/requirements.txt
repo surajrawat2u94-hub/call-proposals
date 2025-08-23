@@ -2,4 +2,6 @@ requests
 beautifulsoup4
 lxml
 python-dateutil
-PyPDF2    # optional; used only if PDF parsing is possible
+pdfplumber
+PyPDF2
+# openai  # optional, only if you set OPENAI_API_KEY in repo secrets
