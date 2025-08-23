@@ -1,127 +1,188 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>Call Proposals Management System</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <style>
-    :root { --bg:#0f172a; --panel:#111827; --ink:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; }
-    html,body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; background:#0b1220; color:var(--ink); }
-    header { padding:18px 20px; border-bottom:1px solid #1f2937; background:var(--panel); position:sticky; top:0; z-index:10; }
-    header h1 { margin:0 0 6px; font-size:20px; }
-    header small { color:var(--muted); }
-    main { max-width:1200px; margin: 18px auto; padding: 0 16px; }
-    .bar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
-    input[type=search] { padding:10px 12px; width:320px; border-radius:8px; border:1px solid #283446; background:#0a1424; color:var(--ink); }
-    .pill { padding:8px 12px; background:#0a1424; border:1px solid #283446; border-radius:8px; color:var(--ink); }
-    table { width:100%; border-collapse:collapse; font-size:14px; }
-    thead th { position:sticky; top:74px; background:#0b1220; color:#9fb3c8; text-align:left; padding:10px 8px; border-bottom:1px solid #1f2937; }
-    tbody td { padding:12px 8px; border-bottom:1px solid #111827; vertical-align:top; }
-    a { color:var(--accent); text-decoration:none; }
-    .muted { color:var(--muted); }
-    .badge { padding:2px 8px; border-radius:999px; border:1px solid #334155; background:#0a1424; color:#9fb3c8; font-size:12px; }
-    .count { margin-left:auto; color:#9fb3c8; }
-    .nowrap { white-space:nowrap; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Call Proposals Management System</title>
+
+<!-- minimal modern reset -->
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #111827;
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --accent: #60a5fa;
+    --border: #1f2937;
+    --row: #0b1220;
+    --rowAlt: #0f172a;
+  }
+  html,body { margin:0; font-family: ui-sans-serif,system-ui,-apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji"; background: var(--bg); color: var(--fg); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .container { max-width: 1200px; margin: 18px auto; padding: 0 14px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  .meta { color: var(--muted); font-size: .9rem; margin-bottom: 12px; }
+
+  .toolbar { display:flex; gap:10px; align-items:center; flex-wrap: wrap; margin-bottom: 12px; }
+  .toolbar input[type="search"] { background:#0b1220; border:1px solid var(--border); color:var(--fg); padding:8px 10px; border-radius:8px; width:260px; }
+  .toolbar label { font-size:.9rem; color:var(--muted); display:flex; gap:6px; align-items:center; }
+  .pill { background:#0b1220; border:1px solid var(--border); color:var(--muted); padding:6px 10px; border-radius:999px; font-size:.85rem; }
+
+  table { width:100%; border-collapse: collapse; }
+  thead th { position: sticky; top: 0; z-index:1; background: var(--panel); }
+  th, td { text-align:left; border-bottom:1px solid var(--border); padding:10px; vertical-align: top; }
+  tbody tr:nth-child(odd) { background: var(--row); }
+  tbody tr:nth-child(even){ background: var(--rowAlt); }
+
+  .title-cell { max-width: 520px; }
+  .title-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;                 /* clamp to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .col-deadline     { width: 9rem; }
+  .col-agency       { width: 14rem; }
+  .col-area         { width: 12rem; }
+  .col-eligibility  { width: 14rem; }
+  .col-budget       { width: 10rem; }
+  .col-website      { width: 6rem;  white-space: nowrap; }
+
+  .btn { background: var(--accent); color:#0b1220; border: none; padding: 8px 12px; border-radius: 8px; cursor:pointer; }
+  .btn:hover { opacity:.95; }
+</style>
 </head>
 <body>
-  <header>
-    <h1>Call Proposals Management System</h1>
-    <small id="ts" class="muted"></small>
-  </header>
+  <div class="container">
+    <div class="panel">
+      <h1>Call Proposals Management System</h1>
+      <div class="meta" id="meta"></div>
 
-  <main>
-    <div class="bar">
-      <input id="q" type="search" placeholder="Search title, agency, area, eligibility…"/>
-      <label class="pill"><input id="ind" type="checkbox" />&nbsp; India-related only</label>
-      <span class="count"><span id="n">0</span> results</span>
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Search title / agency / area / eligibility…" />
+        <label><input id="f_future" type="checkbox" /> Show only future deadlines</label>
+        <label><input id="f_india" type="checkbox" /> India-related proposals only</label>
+        <span class="pill" id="count">Total 0</span>
+        <button class="btn" id="csv">Export to CSV</button>
+      </div>
+
+      <div class="tablewrap">
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th class="col-deadline">Deadline</th>
+              <th class="col-agency">Funding Agency</th>
+              <th class="col-area">Area</th>
+              <th class="col-eligibility">Eligibility</th>
+              <th class="col-budget">Funding/Budget (INR)</th>
+              <th class="col-website">Website</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
     </div>
-
-    <div class="pill" style="margin-bottom:10px;">
-      Columns: &nbsp;
-      <label><input type="checkbox" class="col" data-col="area" checked> Area</label>&nbsp;&nbsp;
-      <label><input type="checkbox" class="col" data-col="eligibility" checked> Eligibility</label>&nbsp;&nbsp;
-      <label><input type="checkbox" class="col" data-col="budget" checked> Funding/Budget</label>
-    </div>
-
-    <table id="t">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th class="nowrap">Deadline</th>
-          <th>Funding Agency</th>
-          <th class="col-area">Area</th>
-          <th class="col-eligibility">Eligibility</th>
-          <th class="col-budget nowrap">Funding/Budget</th>
-          <th>Website</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </main>
+  </div>
 
 <script>
-(async function () {
-  const res = await fetch('data.json', {cache:'no-store'});
-  const data = await res.json().catch(_ => ({updated_utc:'', calls:[]}));
-  document.getElementById('ts').textContent = data.updated_utc ? ('Updated: ' + data.updated_utc) : '';
+async function loadData() {
+  const r = await fetch('data.json', {cache:'no-store'});
+  if (!r.ok) throw new Error('data.json not found');
+  return await r.json();
+}
 
-  const tbody = document.querySelector('#t tbody');
-  const q = document.getElementById('q');
-  const ind = document.getElementById('ind');
-  const n = document.getElementById('n');
-  const toggles = document.querySelectorAll('.col');
+const esc = s => (s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const fmtDate = iso => iso && iso!=='N/A' ? iso : 'N/A';
 
-  function row(c) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><div>${escapeHtml(c.title || 'N/A')}</div></td>
-      <td class="nowrap">${escapeHtml(c.deadline || 'N/A')}</td>
-      <td>${escapeHtml(c.funding_agency || 'N/A')}</td>
-      <td class="col-area">${escapeHtml(c.area || 'N/A')}</td>
-      <td class="col-eligibility">${escapeHtml(c.eligibility || 'N/A')}</td>
-      <td class="col-budget">${escapeHtml(c.budget || 'N/A')}</td>
-      <td>${c.website ? `<a href="${c.website}" target="_blank" rel="noopener">Visit</a>` : 'N/A'}</td>`;
-    return tr;
+function csv(rows) {
+  const escape = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const head = ["Title","Deadline","Funding Agency","Area","Eligibility","Funding/Budget","Website"];
+  const lines = [ head.map(escape).join(',') ];
+  for (const r of rows) {
+    lines.push([r.title,r.deadline,r.funding_agency,r.area,r.eligibility,r.budget,r.website].map(escape).join(','));
+  }
+  return lines.join('\r\n');
+}
+
+function render(rows){
+  const tb = document.querySelector('#tbl tbody');
+  tb.innerHTML = rows.map(r => `
+    <tr>
+      <td class="title-cell" title="${esc(r.title)}"><span class="title-clamp">${esc(r.title)}</span></td>
+      <td class="col-deadline">${esc(fmtDate(r.deadline))}</td>
+      <td class="col-agency">${esc(r.funding_agency||'N/A')}</td>
+      <td class="col-area">${esc(r.area||'N/A')}</td>
+      <td class="col-eligibility">${esc(r.eligibility||'N/A')}</td>
+      <td class="col-budget">${esc(r.budget||'N/A')}</td>
+      <td class="col-website"><a href="${esc(r.website)}" target="_blank" rel="noopener">Visit</a></td>
+    </tr>
+  `).join('');
+  document.querySelector('#count').textContent = `Total ${rows.length}`;
+}
+
+function applyFilters(all) {
+  const q = document.querySelector('#q').value.trim().toLowerCase();
+  const fFuture = document.querySelector('#f_future').checked;
+  const fIndia = document.querySelector('#f_india').checked;
+  let rows = all.slice();
+
+  if (q) {
+    rows = rows.filter(r => {
+      const hay = `${r.title} ${r.funding_agency} ${r.area} ${r.eligibility}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  if (fFuture) {
+    const today = new Date().toISOString().slice(0,10);
+    rows = rows.filter(r => r.deadline && r.deadline !== 'N/A' && r.deadline >= today);
+  }
+  if (fIndia) {
+    rows = rows.filter(r => (r.india_related||'no') === 'yes');
   }
 
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
-
-  const calls = data.calls || [];
-
-  function apply() {
-    const qv = (q.value || '').toLowerCase();
-    const onlyIN = ind.checked;
-
-    tbody.innerHTML = '';
-    let count = 0;
-    for (const c of calls) {
-      if (onlyIN && (c.india_related !== 'yes')) continue;
-      const hay = (c.title + ' ' + c.funding_agency + ' ' + (c.area||'') + ' ' + (c.eligibility||'')).toLowerCase();
-      if (qv && !hay.includes(qv)) continue;
-      tbody.appendChild(row(c));
-      count++;
-    }
-    n.textContent = count;
-  }
-
-  toggles.forEach(chk => {
-    chk.addEventListener('change', () => {
-      const col = chk.dataset.col;
-      document.querySelectorAll('.col-'+col).forEach(el => {
-        el.style.display = chk.checked ? '' : 'none';
-      });
-    });
-    // initial
-    document.querySelectorAll('.col-'+chk.dataset.col).forEach(el => {
-      el.style.display = chk.checked ? '' : 'none';
-    });
+  // sort: nearest upcoming first; N/A bottom
+  rows.sort((a,b) => {
+    const ad = a.deadline === 'N/A' ? '9999-12-31' : a.deadline;
+    const bd = b.deadline === 'N/A' ? '9999-12-31' : b.deadline;
+    return ad.localeCompare(bd);
   });
 
-  q.addEventListener('input', apply);
-  ind.addEventListener('change', apply);
-  apply();
+  return rows;
+}
+
+(async function(){
+  try {
+    const data = await loadData();
+    document.querySelector('#meta').textContent = `Updated: ${data.updated_utc || ''}`;
+    const all = (data.calls||[]);
+
+    const update = () => render(applyFilters(all));
+    ['#q','#f_future','#f_india'].forEach(sel => {
+      document.querySelector(sel).addEventListener('input', update);
+      document.querySelector(sel).addEventListener('change', update);
+    });
+
+    document.querySelector('#csv').addEventListener('click', () => {
+      const rows = applyFilters(all);
+      const blob = new Blob([csv(rows)], {type: 'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), {href:url, download:'calls.csv'});
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    update();
+  } catch (e) {
+    console.error(e);
+    document.querySelector('#meta').textContent = 'Error: failed to load data.json';
+  }
 })();
 </script>
 </body>
