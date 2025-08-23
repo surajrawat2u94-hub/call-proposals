@@ -4,4 +4,4 @@ lxml
 python-dateutil
 pdfplumber
 PyPDF2
-openai   # <— optional; used only if OPENAI_API_KEY is present
+openai
