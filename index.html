@@ -4,271 +4,494 @@
   <meta charset="utf-8" />
   <title>Call Proposals Management System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- TailwindCSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="data:image/svg+xml,\
+  <svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2300a6ff%22 stroke-width=%222%22><path d=%22M5 13l4 4L19 7%22/></svg>">
   <style>
-    .thin-scrollbar::-webkit-scrollbar { width: 8px; }
-    .thin-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-    .thin-scrollbar { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
-    .tab-active { border-color: #3b82f6; color:#1f2937; }
-    .tab-inactive { border-color: transparent; color:#6b7280; }
-    .thead th { cursor:pointer; user-select:none; }
+    /* Fixed header scrolling table */
+    .table-wrap { overflow: auto; }
+    table { border-collapse: separate; border-spacing: 0; }
+    thead th { position: sticky; top: 0; background: #f8fafc; z-index: 1; }
+    .badge { @apply px-2 py-0.5 rounded text-xs font-medium; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
-  <header class="bg-white shadow-sm sticky top-0 z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex items-center gap-3">
-        <div class="p-2 bg-blue-600 rounded-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h13M9 7h13M5 7h.01M5 17h.01M5 12h.01"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold">Call Proposals Management System</h1>
-          <p class="text-sm text-slate-500">Filter, sort, resize, show/hide, and export funding opportunities</p>
-        </div>
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Header -->
+    <header class="flex items-center gap-3 mb-6">
+      <div class="shrink-0 w-9 h-9 rounded bg-sky-600/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 13l4 4L19 7"></path>
+        </svg>
       </div>
-    </div>
-  </header>
+      <div>
+        <h1 class="text-xl sm:text-2xl font-semibold">Call Proposals Management System</h1>
+        <p class="text-slate-500 text-sm">Filter, sort, export, and explore funding opportunities</p>
+      </div>
+    </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- Sidebar -->
-      <aside class="lg:col-span-4 xl:col-span-3">
-        <div class="bg-white rounded-xl shadow-sm p-4 sticky top-[92px] thin-scrollbar max-h-[calc(100vh-110px)] overflow-auto">
-          <h2 class="text-base font-semibold flex items-center gap-2">
-            <span class="text-blue-600">●</span> Current Calls Filters
-          </h2>
+    <!-- Main layout: Filters + Content -->
+    <div class="grid lg:grid-cols-[280px_1fr] gap-6">
+      <!-- Filters -->
+      <aside class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-fit">
+        <h2 class="font-semibold text-slate-700 mb-3">Current Calls Filters</h2>
 
-          <div class="mt-4 space-y-3">
-            <label class="flex items-start gap-3">
-              <input id="chk-future" type="checkbox" class="mt-1 h-4 w-4 text-blue-600 rounded border-slate-300" />
-              <span>
-                <span class="font-medium">Show only future deadlines</span>
-                <span class="block text-sm text-slate-500">(Current tab)</span>
-              </span>
+        <label class="flex items-center gap-2 text-sm mb-2">
+          <input id="onlyFuture" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+          <span>Show only future deadlines</span>
+        </label>
+
+        <label class="flex items-center gap-2 text-sm mb-4">
+          <input id="indiaOnly" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+          <span>India-related proposals only</span>
+        </label>
+
+        <div class="mb-4">
+          <label class="text-xs text-slate-500">Search in titles, areas, agencies, or eligibility</label>
+          <input id="q" type="text" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"
+                 placeholder="Type to search…" />
+        </div>
+
+        <div class="mb-3">
+          <label class="text-xs text-slate-500">Filter by Area</label>
+          <select id="areaSel" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"></select>
+        </div>
+        <div class="mb-3">
+          <label class="text-xs text-slate-500">Filter by Funding Agency</label>
+          <select id="agencySel" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"></select>
+        </div>
+        <div class="mb-3">
+          <label class="text-xs text-slate-500">Filter by Category</label>
+          <select id="catSel" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"></select>
+        </div>
+        <div class="mb-3">
+          <label class="text-xs text-slate-500">Filter by Research Category</label>
+          <select id="resCatSel" class="mt-1 w-full rounded border-slate-300 focus:ring-sky-500 focus:border-sky-500"></select>
+        </div>
+
+        <div class="mt-4 border-t pt-4">
+          <h3 class="text-sm font-medium text-slate-700 mb-2">Show / Hide Columns</h3>
+          <div class="space-y-2 text-sm">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" data-col="area" class="col-toggle rounded border-slate-300 text-sky-600" checked />
+              <span>Area</span>
             </label>
-
-            <label class="flex items-start gap-3">
-              <input id="chk-india" type="checkbox" class="mt-1 h-4 w-4 text-blue-600 rounded border-slate-300" checked />
-              <span class="font-medium">India-related proposals only</span>
+            <label class="flex items-center gap-2">
+              <input type="checkbox" data-col="eligibility" class="col-toggle rounded border-slate-300 text-sky-600" checked />
+              <span>Eligibility</span>
             </label>
-
-            <div>
-              <label class="text-sm font-medium">Search in titles, areas, agencies, or eligibility</label>
-              <input id="txt-search" type="text" class="mt-1 w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Type to search…" />
-            </div>
-
-            <div>
-              <label class="text-sm font-medium">Filter by Area</label>
-              <select id="sel-area" class="mt-1 w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"></select>
-            </div>
-
-            <div>
-              <label class="text-sm font-medium">Filter by Funding Agency</label>
-              <select id="sel-agency" class="mt-1 w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"></select>
-            </div>
-
-            <div>
-              <label class="text-sm font-medium">Filter by Category</label>
-              <select id="sel-category" class="mt-1 w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"></select>
-            </div>
-
-            <div>
-              <label class="text-sm font-medium">Filter by Research Category</label>
-              <select id="sel-research" class="mt-1 w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"></select>
-            </div>
-
-            <div class="pt-2">
-              <button id="btn-reset" class="text-sm px-3 py-2 rounded-lg border bg-slate-50 hover:bg-slate-100">
-                Reset filters
-              </button>
-            </div>
+            <label class="flex items-center gap-2">
+              <input type="checkbox" data-col="budgetINR" class="col-toggle rounded border-slate-300 text-sky-600" checked />
+              <span>Funding/Budget (INR)</span>
+            </label>
+            <label class="flex items-center gap-2">
+              <input type="checkbox" data-col="category" class="col-toggle rounded border-slate-300 text-sky-600" />
+              <span>Category</span>
+            </label>
+            <label class="flex items-center gap-2">
+              <input type="checkbox" data-col="researchCategory" class="col-toggle rounded border-slate-300 text-sky-600" />
+              <span>Research Category</span>
+            </label>
           </div>
         </div>
+
+        <button id="resetBtn" class="mt-4 w-full rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm py-2">
+          Reset filters
+        </button>
       </aside>
 
-      <!-- Main -->
-      <section class="lg:col-span-8 xl:col-span-9">
-        <div class="bg-white rounded-xl shadow-sm p-3">
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-3">
-              <button id="tab-current" class="px-3 py-2 border-b-2 tab-active text-sm font-medium">Current Calls</button>
-              <button id="tab-recurring" class="px-3 py-2 border-b-2 tab-inactive text-sm font-medium">Recurring Annual Calls</button>
+      <!-- Content -->
+      <section class="space-y-4">
+        <!-- Tabs + toolbar -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3">
+          <div class="flex items-center justify-between">
+            <div class="flex gap-1">
+              <button id="tabCurrent"
+                      class="tab-btn px-3 py-2 rounded-lg text-sm font-medium bg-sky-50 text-sky-700 border border-sky-200">
+                Current Calls
+              </button>
+              <button id="tabRecurring"
+                      class="tab-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900">
+                Recurring Annual Calls
+              </button>
             </div>
-            <div class="flex items-center gap-2">
-              <button id="btn-export" class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+
+            <div class="flex items-center gap-3">
+              <button id="exportCsv"
+                      class="px-3 py-2 rounded-lg text-sm bg-slate-800 text-white hover:bg-slate-900">
                 Export to CSV
               </button>
-              <div class="text-sm text-slate-500">
-                Total <span id="lbl-total" class="font-semibold">0</span>
+              <div class="text-sm text-slate-600">
+                Total <span id="totalCount" class="font-semibold">0</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="mt-4 bg-white rounded-xl shadow-sm overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-              <thead class="bg-slate-100 thead">
+        <!-- Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div class="table-wrap">
+            <table id="callsTable" class="min-w-full text-sm">
+              <thead class="text-slate-600">
                 <tr>
-                  <th data-sort="title" class="px-4 py-3 text-left font-semibold">Title</th>
-                  <th data-sort="deadline" class="px-4 py-3 text-left font-semibold">Deadline</th>
-                  <th data-sort="agency" class="px-4 py-3 text-left font-semibold">Funding Agency</th>
-                  <th data-sort="area" class="px-4 py-3 text-left font-semibold">Area</th>
-                  <th data-sort="eligibility" class="px-4 py-3 text-left font-semibold hidden md:table-cell">Eligibility</th>
-                  <th data-sort="budgetINR" class="px-4 py-3 text-left font-semibold hidden lg:table-cell">Funding/Budget (INR)</th>
-                  <th class="px-4 py-3 text-left font-semibold">Website Link</th>
+                  <th class="sticky left-0 z-10 bg-slate-50 border-b px-3 py-2 text-left w-[28rem]">Title</th>
+                  <th class="border-b px-3 py-2 text-left">Deadline</th>
+                  <th class="border-b px-3 py-2 text-left w-[16rem]">Funding Agency</th>
+                  <th class="border-b px-3 py-2 text-left col-area">Area</th>
+                  <th class="border-b px-3 py-2 text-left col-eligibility w-[24rem]">Eligibility</th>
+                  <th class="border-b px-3 py-2 text-left col-budgetINR">Funding/Budget (INR)</th>
+                  <th class="border-b px-3 py-2 text-left">Website</th>
+                  <th class="border-b px-3 py-2 text-left col-category">Category</th>
+                  <th class="border-b px-3 py-2 text-left col-researchCategory">Research Category</th>
                 </tr>
               </thead>
               <tbody id="tbody" class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
-          <div id="empty" class="p-6 hidden">
-            <p class="text-slate-500">No results. Try adjusting your filters.</p>
-          </div>
         </div>
       </section>
     </div>
-  </main>
+  </div>
 
   <script>
-    const $ = s => document.querySelector(s);
-    const todayStr = () => new Date().toISOString().slice(0,10);
+    // ---------- Utilities ----------
+    const $ = (sel, ctx=document) => ctx.querySelector(sel);
+    const $$ = (sel, ctx=document) => [...ctx.querySelectorAll(sel)];
+    const NA = v => (v && String(v).trim()) ? String(v).trim() : "N/A";
 
-    function parseDate(s){ if(!s) return null; const d = /^\d{4}-\d{2}-\d{2}$/.test(s)?new Date(s):new Date(Date.parse(s)); return isNaN(d)?null:d; }
-    function fmtDate(s){ const d=parseDate(s); return d? d.toISOString().slice(0,10) : "N/A"; }
-    const showNA = v => (v && String(v).trim() !== "" ? v : "N/A");
+    const parseDate = (s) => {
+      if (!s) return null;
+      const t = Date.parse(s);
+      return isNaN(t) ? null : new Date(t);
+    };
+    const fmtDate = (s) => {
+      const d = parseDate(s);
+      if (!d) return "N/A";
+      return d.toISOString().slice(0,10);
+    };
 
-    function cleanKey(s){ return (s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
-    function recordKey(r){ return cleanKey((r.title||"")+"|"+(r.agency||"")); }
+    const today = () => new Date().toISOString().slice(0,10);
 
-    // --- merge-dedupe: prefer non-empty fields and keep deadline/url if any version has it
-    function mergeRecord(a,b){
-      const out = {...a};
-      for(const k of Object.keys(b)){
-        if(k==="isRecurring"){ out[k] = out[k] || !!b[k]; continue; }
-        if((!out[k] || out[k]==="N/A") && b[k]) out[k]=b[k];
-        if(k==="deadline" && !out.deadline && b.deadline) out.deadline=b.deadline;
+    const toCSV = (rows, columns) => {
+      const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const header = columns.map(c => esc(c.header)).join(",");
+      const lines = rows.map(r => columns.map(c => esc(r[c.key])).join(","));
+      return [header, ...lines].join("\n");
+    };
+
+    // ---------- State ----------
+    let DATA = [];
+    let tab = "current"; // or "recurring"
+
+    const els = {
+      onlyFuture: $("#onlyFuture"),
+      indiaOnly: $("#indiaOnly"),
+      q: $("#q"),
+      areaSel: $("#areaSel"),
+      agencySel: $("#agencySel"),
+      catSel: $("#catSel"),
+      resCatSel: $("#resCatSel"),
+      resetBtn: $("#resetBtn"),
+      totalCount: $("#totalCount"),
+      tbody: $("#tbody"),
+      exportCsv: $("#exportCsv"),
+      tabCurrent: $("#tabCurrent"),
+      tabRecurring: $("#tabRecurring"),
+    };
+
+    const columns = [
+      { key: "title", header: "Title" },
+      { key: "deadline", header: "Deadline" },
+      { key: "agency", header: "Funding Agency" },
+      { key: "area", header: "Area" },
+      { key: "eligibility", header: "Eligibility" },
+      { key: "budgetINR", header: "Funding/Budget (INR)" },
+      { key: "url", header: "Website" },
+      { key: "category", header: "Category" },
+      { key: "researchCategory", header: "Research Category" },
+    ];
+
+    const colToggles = $$(".col-toggle");
+    const applyColumnToggles = () => {
+      const on = {};
+      colToggles.forEach(t => { on[t.dataset.col] = t.checked; });
+      // toggle <th> visibility
+      for (const key of ["area","eligibility","budgetINR","category","researchCategory"]) {
+        const show = !!on[key];
+        $$(".col-" + key).forEach(el => {
+          el.style.display = show ? "" : "none";
+        });
       }
-      if(!out.url && b.url) out.url=b.url;
-      return out;
-    }
-    function dedupe(list){
-      const m = {};
-      for(const r of list){
-        const key = recordKey(r);
-        if(!m[key]) m[key] = {...r};
-        else m[key] = mergeRecord(m[key], r);
-      }
-      return Object.values(m);
-    }
-
-    let RAW = [];
-    let CURRENT_TAB = "current";
-    let SORT = { key: "deadline", dir: "asc" };
-
-    const elSearch=$("#txt-search"), elArea=$("#sel-area"), elAgency=$("#sel-agency"),
-          elCategory=$("#sel-category"), elResearch=$("#sel-research"),
-          elFuture=$("#chk-future"), elIndia=$("#chk-india"),
-          elTotal=$("#lbl-total"), elTbody=$("#tbody"), elEmpty=$("#empty"),
-          tabCurrent=$("#tab-current"), tabRecurring=$("#tab-recurring");
-
-    const SAMPLE=[{title:"SERB Core Research Grant (CRG) – Annual",deadline:"",agency:"ANRF (formerly SERB)",area:"Science & Engineering",eligibility:"Faculty researchers in Indian institutions",budgetINR:"",url:"https://www.serbonline.in/",category:"National",researchCategory:"Research Proposal",extendedDeadline:"",country:"India",isRecurring:true}];
-
-    fetch("data.json",{cache:"no-store"})
-      .then(r=>r.ok?r.json():SAMPLE)
-      .then(j=>{
-        const src = Array.isArray(j)&&j.length? j : SAMPLE;
-        RAW = dedupe(src.map(n=>({
-          title:(n.title||"").trim(), deadline:(n.deadline||"").trim(),
-          agency:(n.agency||"").trim(), area:(n.area||"").trim(),
-          eligibility:(n.eligibility||"").trim(), budgetINR:(n.budgetINR||"").trim(),
-          url:(n.url||"").trim(), category:(n.category||"").trim(),
-          researchCategory:(n.researchCategory||"").trim(),
-          extendedDeadline:(n.extendedDeadline||"").trim(), country:(n.country||"Global").trim(),
-          isRecurring:!!n.isRecurring
-        })));
-        initFilters(RAW); render();
-      })
-      .catch(()=>{ RAW=dedupe(SAMPLE); initFilters(RAW); render(); });
-
-    function uniqueSorted(list, getter){ return Array.from(new Set(list.map(getter).filter(Boolean))).sort((a,b)=>a.localeCompare(b)); }
-    function fillSelect(el, arr){ el.innerHTML=""; const o=document.createElement("option");o.value="";o.textContent="All";el.appendChild(o); arr.forEach(v=>{const a=document.createElement("option"); a.value=v; a.textContent=v; el.appendChild(a);}); }
-    function initFilters(rows){
-      fillSelect(elArea, uniqueSorted(rows, r=>r.area));
-      fillSelect(elAgency, uniqueSorted(rows, r=>r.agency));
-      fillSelect(elCategory, uniqueSorted(rows, r=>r.category));
-      fillSelect(elResearch, uniqueSorted(rows, r=>r.researchCategory));
-    }
-    function matchesIndia(r){ return (r.country? r.country.toLowerCase().includes("india") : /(india|icmr|dbt|dst|serb|anrf|igstc|csir)/i.test(r.agency||"")); }
-    function isFuture(r){ const d=parseDate(r.deadline); if(!d) return false; const t=new Date(); t.setHours(0,0,0,0); return d>=t; }
-
-    function applyFilters(){
-      const search=(elSearch.value||"").toLowerCase().trim();
-      let rows = RAW.filter(r=> CURRENT_TAB==="recurring" ? r.isRecurring : !r.isRecurring);
-      if(elIndia.checked) rows=rows.filter(matchesIndia);
-      if(elFuture.checked && CURRENT_TAB==="current") rows=rows.filter(isFuture);
-      if(search){ rows=rows.filter(r=>[r.title,r.area,r.agency,r.eligibility].join(" ").toLowerCase().includes(search)); }
-      if(elArea.value) rows=rows.filter(r=>r.area===elArea.value);
-      if(elAgency.value) rows=rows.filter(r=>r.agency===elAgency.value);
-      if(elCategory.value) rows=rows.filter(r=>r.category===elCategory.value);
-      if(elResearch.value) rows=rows.filter(r=>r.researchCategory===elResearch.value);
-
-      const key=SORT.key, dir=SORT.dir==="asc"?1:-1;
-      rows.sort((a,b)=>{
-        const va=(key==="deadline")?(parseDate(a[key])||new Date("9999-12-31")):(a[key]||"").toLowerCase();
-        const vb=(key==="deadline")?(parseDate(b[key])||new Date("9999-12-31")):(b[key]||"").toLowerCase();
-        if(va<vb) return -1*dir; if(va>vb) return 1*dir; return 0;
+      // toggle <td> in body
+      $$("#tbody tr").forEach(tr => {
+        for (const key of ["area","eligibility","budgetINR","category","researchCategory"]) {
+          const td = tr.querySelector(`td[data-col="${key}"]`);
+          if (td) td.style.display = on[key] ? "" : "none";
+        }
       });
+    };
+
+    // ---------- Filters ----------
+    const uniqueSorted = (arr) =>
+      [...new Set(arr.filter(Boolean).map(x => String(x).trim()))].sort((a,b)=>a.localeCompare(b));
+
+    const fillSelect = (sel, values, label="All") => {
+      sel.innerHTML = "";
+      const optAll = document.createElement("option");
+      optAll.value = "";
+      optAll.textContent = label + " (All)";
+      sel.appendChild(optAll);
+      values.forEach(v => {
+        const o = document.createElement("option");
+        o.value = v; o.textContent = v;
+        sel.appendChild(o);
+      });
+    };
+
+    const buildFacetLists = () => {
+      const use = DATA.filter(r => tab === "recurring" ? r.isRecurring : !r.isRecurring);
+      fillSelect(els.areaSel, uniqueSorted(use.map(r => r.area)));
+      fillSelect(els.agencySel, uniqueSorted(use.map(r => r.agency)), "Agency");
+      fillSelect(els.catSel, uniqueSorted(use.map(r => r.category)), "Category");
+      fillSelect(els.resCatSel, uniqueSorted(use.map(r => r.researchCategory)), "Research Category");
+    };
+
+    const matchesIndia = (r) => {
+      const s = `${r.country || ""} ${r.agency || ""} ${r.title || ""}`.toLowerCase();
+      return s.includes("india");
+    };
+
+    const filterRows = () => {
+      const q = els.q.value.trim().toLowerCase();
+      const area = els.areaSel.value;
+      const ag = els.agencySel.value;
+      const cat = els.catSel.value;
+      const rc = els.resCatSel.value;
+
+      let rows = DATA.filter(r => tab === "recurring" ? r.isRecurring : !r.isRecurring);
+
+      if (els.indiaOnly.checked) {
+        rows = rows.filter(matchesIndia);
+      }
+
+      if (els.onlyFuture.checked) {
+        rows = rows.filter(r => {
+          const d = parseDate(r.deadline);
+          return d ? d >= new Date(today()) : false; // keep only with future deadlines
+        });
+      }
+
+      if (q) {
+        rows = rows.filter(r => {
+          const hay = `${r.title} ${r.area} ${r.agency} ${r.eligibility}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
+      if (area) rows = rows.filter(r => (r.area||"") === area);
+      if (ag) rows = rows.filter(r => (r.agency||"") === ag);
+      if (cat) rows = rows.filter(r => (r.category||"") === cat);
+      if (rc) rows = rows.filter(r => (r.researchCategory||"") === rc);
+
+      // sort by deadline asc; empty at bottom
+      rows.sort((a,b) => {
+        const da = parseDate(a.deadline);
+        const db = parseDate(b.deadline);
+        if (da && db) return da - db;
+        if (da) return -1;
+        if (db) return 1;
+        return a.title.localeCompare(b.title);
+      });
+
       return rows;
-    }
+    };
 
-    function render(){
-      const rows = applyFilters();
-      elTotal.textContent = rows.length;
-      elTbody.innerHTML=""; elEmpty.classList.toggle("hidden", rows.length>0);
-      for(const r of rows){
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
-          <td class="px-4 py-3"><div class="font-medium">${showNA(r.title)}</div><div class="text-xs text-slate-400 md:hidden">${showNA(r.agency)}</div></td>
-          <td class="px-4 py-3">${fmtDate(r.deadline)}</td>
-          <td class="px-4 py-3 hidden md:table-cell">${showNA(r.agency)}</td>
-          <td class="px-4 py-3">${showNA(r.area)}</td>
-          <td class="px-4 py-3 hidden md:table-cell">${showNA(r.eligibility)}</td>
-          <td class="px-4 py-3 hidden lg:table-cell">${showNA(r.budgetINR)}</td>
-          <td class="px-4 py-3">${r.url?`<a class="text-blue-600 hover:underline" href="${r.url}" target="_blank" rel="noopener">Visit Website</a>`:"N/A"}</td>`;
-        elTbody.appendChild(tr);
+    const render = () => {
+      const rows = filterRows();
+      els.totalCount.textContent = rows.length;
+
+      const on = {};
+      colToggles.forEach(t => on[t.dataset.col] = t.checked);
+
+      els.tbody.innerHTML = "";
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/60";
+
+        const tdTitle = document.createElement("td");
+        tdTitle.className = "sticky left-0 z-[5] bg-white/90 border-b px-3 py-2";
+        const a = document.createElement("a");
+        a.href = r.url || "#";
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.className = "text-sky-700 hover:text-sky-900";
+        a.textContent = NA(r.title);
+        tdTitle.appendChild(a);
+        tr.appendChild(tdTitle);
+
+        const tdDeadline = document.createElement("td");
+        tdDeadline.className = "border-b px-3 py-2";
+        const dstr = fmtDate(r.deadline);
+        const badge = document.createElement("span");
+        badge.className = "badge " + (dstr !== "N/A" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600");
+        badge.textContent = dstr;
+        tdDeadline.appendChild(badge);
+        tr.appendChild(tdDeadline);
+
+        const tdAgency = document.createElement("td");
+        tdAgency.className = "border-b px-3 py-2";
+        tdAgency.textContent = NA(r.agency);
+        tr.appendChild(tdAgency);
+
+        const tdArea = document.createElement("td");
+        tdArea.dataset.col = "area";
+        tdArea.className = "border-b px-3 py-2 col-area";
+        tdArea.textContent = NA(r.area);
+        tr.appendChild(tdArea);
+
+        const tdElig = document.createElement("td");
+        tdElig.dataset.col = "eligibility";
+        tdElig.className = "border-b px-3 py-2 col-eligibility";
+        tdElig.textContent = NA(r.eligibility);
+        tr.appendChild(tdElig);
+
+        const tdBudget = document.createElement("td");
+        tdBudget.dataset.col = "budgetINR";
+        tdBudget.className = "border-b px-3 py-2 col-budgetINR";
+        tdBudget.textContent = NA(r.budgetINR);
+        tr.appendChild(tdBudget);
+
+        const tdUrl = document.createElement("td");
+        tdUrl.className = "border-b px-3 py-2";
+        if (r.url) {
+          const u = document.createElement("a");
+          u.href = r.url; u.target = "_blank"; u.rel = "noopener";
+          u.className = "text-sky-700 hover:text-sky-900";
+          u.textContent = "Visit";
+          tdUrl.appendChild(u);
+        } else {
+          tdUrl.textContent = "N/A";
+        }
+        tr.appendChild(tdUrl);
+
+        const tdCat = document.createElement("td");
+        tdCat.className = "border-b px-3 py-2 col-category";
+        tdCat.dataset.col = "category";
+        tdCat.textContent = NA(r.category);
+        tr.appendChild(tdCat);
+
+        const tdRes = document.createElement("td");
+        tdRes.className = "border-b px-3 py-2 col-researchCategory";
+        tdRes.dataset.col = "researchCategory";
+        tdRes.textContent = NA(r.researchCategory);
+        tr.appendChild(tdRes);
+
+        els.tbody.appendChild(tr);
       }
+
+      applyColumnToggles();
+    };
+
+    const resetFilters = () => {
+      els.onlyFuture.checked = false;
+      els.indiaOnly.checked = false;
+      els.q.value = "";
+      els.areaSel.value = "";
+      els.agencySel.value = "";
+      els.catSel.value = "";
+      els.resCatSel.value = "";
+      render();
+    };
+
+    const exportCurrentView = () => {
+      const rows = filterRows();
+      const cols = columns.filter(c => {
+        if (["area","eligibility","budgetINR","category","researchCategory"].includes(c.key)) {
+          const t = colToggles.find(x => x.dataset.col === c.key);
+          return t ? t.checked : true;
+        }
+        return true;
+      });
+      const mapped = rows.map(r => ({
+        title: r.title || "",
+        deadline: fmtDate(r.deadline),
+        agency: r.agency || "",
+        area: r.area || "",
+        eligibility: r.eligibility || "",
+        budgetINR: r.budgetINR || "",
+        url: r.url || "",
+        category: r.category || "",
+        researchCategory: r.researchCategory || "",
+      }));
+      const csv = toCSV(mapped, cols);
+      const blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `calls_${tab}_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+
+    // ---------- Init ----------
+    async function load() {
+      try {
+        const res = await fetch("data.json", {cache: "no-store"});
+        const data = await res.json();
+        // standardize
+        DATA = (Array.isArray(data) ? data : []).map(r => ({
+          title: r.title || "",
+          deadline: r.deadline || "",
+          agency: r.agency || "",
+          area: r.area || "",
+          eligibility: r.eligibility || "",
+          budgetINR: r.budgetINR || "",
+          url: r.url || "",
+          category: r.category || "",
+          researchCategory: r.researchCategory || "",
+          extendedDeadline: r.extendedDeadline || "",
+          country: r.country || "",
+          isRecurring: !!r.isRecurring,
+        }));
+      } catch (e) {
+        console.error("Failed to load data.json", e);
+        DATA = [];
+      }
+      buildFacetLists();
+      render();
     }
 
-    elSearch.addEventListener("input", render);
-    [elArea, elAgency, elCategory, elResearch].forEach(el=>el.addEventListener("change", render));
-    elFuture.addEventListener("change", render); elIndia.addEventListener("change", render);
-
-    $("#btn-reset").addEventListener("click", ()=>{
-      elSearch.value=""; elArea.value=""; elAgency.value=""; elCategory.value=""; elResearch.value="";
-      elFuture.checked=false; elIndia.checked=true; SORT={key:"deadline",dir:"asc"}; render();
+    // Event wiring
+    ["input","change"].forEach(ev => {
+      els.q.addEventListener(ev, render);
+      els.onlyFuture.addEventListener(ev, render);
+      els.indiaOnly.addEventListener(ev, render);
+      els.areaSel.addEventListener(ev, render);
+      els.agencySel.addEventListener(ev, render);
+      els.catSel.addEventListener(ev, render);
+      els.resCatSel.addEventListener(ev, render);
     });
+    els.resetBtn.addEventListener("click", resetFilters);
+    els.exportCsv.addEventListener("click", exportCurrentView);
 
-    document.querySelectorAll(".thead th[data-sort]").forEach(th=>{
-      th.addEventListener("click", ()=>{
-        const k=th.getAttribute("data-sort");
-        SORT = (SORT.key===k)? {key:k,dir:(SORT.dir==="asc"?"desc":"asc")} : {key:k,dir:"asc"};
-        render();
-      });
-    });
+    colToggles.forEach(t => t.addEventListener("change", applyColumnToggles));
 
-    tabCurrent.addEventListener("click", ()=>{ CURRENT_TAB="current"; tabCurrent.classList.add("tab-active"); tabCurrent.classList.remove("tab-inactive"); tabRecurring.classList.add("tab-inactive"); tabRecurring.classList.remove("tab-active"); elFuture.disabled=false; render(); });
-    tabRecurring.addEventListener("click", ()=>{ CURRENT_TAB="recurring"; tabRecurring.classList.add("tab-active"); tabRecurring.classList.remove("tab-inactive"); tabCurrent.classList.add("tab-inactive"); tabCurrent.classList.remove("tab-active"); elFuture.checked=false; elFuture.disabled=true; render(); });
+    // Tabs
+    const activateTabBtn = () => {
+      if (tab === "current") {
+        els.tabCurrent.classList.add("bg-sky-50","text-sky-700","border","border-sky-200");
+        els.tabRecurring.classList.remove("bg-sky-50","text-sky-700","border","border-sky-200");
+        els.tabRecurring.classList.add("text-slate-600");
+      } else {
+        els.tabRecurring.classList.add("bg-sky-50","text-sky-700","border","border-sky-200");
+        els.tabCurrent.classList.remove("bg-sky-50","text-sky-700","border","border-sky-200");
+        els.tabCurrent.classList.add("text-slate-600");
+      }
+    };
+    els.tabCurrent.addEventListener("click", () => { tab = "current"; buildFacetLists(); activateTabBtn(); render(); });
+    els.tabRecurring.addEventListener("click", () => { tab = "recurring"; buildFacetLists(); activateTabBtn(); render(); });
 
-    $("#btn-export").addEventListener("click", ()=>{
-      const rows=applyFilters();
-      const cols=["title","deadline","agency","area","eligibility","budgetINR","url","category","researchCategory","extendedDeadline","country","isRecurring"];
-      const header=cols.join(","), lines=rows.map(r=>cols.map(c=>{const s=String(r[c]??"");return /[,"\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;}).join(","));
-      const csv=[header,...lines].join("\n"); const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
-      const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="calls_export.csv"; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
-    });
+    // Start
+    load().then(activateTabBtn);
   </script>
 </body>
 </html>
