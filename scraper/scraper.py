@@ -1,39 +1,32 @@
 #!/usr/bin/env python3
 """
-Scrapes funding calls ONLY from your curated agencies list.
+Scrapes research funding calls from a set of agency listing pages,
+extracts key fields (deadline, eligibility, budget, area), deduplicates,
+and writes data.json to the repo root for the dashboard.
 
-Source list priority:
-  1) sources.json  (generated from your PDF by the workflow step)
-  2) data/agencies.pdf (parsed on the fly if sources.json missing)
-  3) tiny built-in fallback (DST/DBT) so local runs don't crash
+Features
+- Permissive link discovery (2-pass) + optional per-site CSS selectors
+- Parses HTML and PDFs
+- Heuristic field extraction + optional OpenAI enrichment (if OPENAI_API_KEY set)
+- De-duplicates by (Title + Agency) with “more-complete” preference
 
-Extraction:
-  - HTML: robust title + heuristic fields (Deadline, Eligibility, Area, Budget)
-  - PDF: pdfplumber / PyPDF2 text + same heuristics
-  - Optional AI fallback if OPENAI_API_KEY is set (fills missing fields)
-De-duplication by (title + agency).
-Writes data.json as a FLAT ARRAY (what your dashboard expects).
+Dependencies: requests, beautifulsoup4, lxml, python-dateutil, pdfplumber (or PyPDF2), openai (optional)
 """
 
 from __future__ import annotations
-import os, re, json, time, logging
+import os
+import re
+import json
+import time
+import urllib.parse
 from typing import Dict, List, Optional, Tuple
-from urllib.parse import urlparse, urljoin
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
 from dateutil import parser as dateparser
 
-# ---------- logging ----------
-logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-7s  %(message)s")
-log = logging.getLogger("scraper")
-
-# ---------- HTTP ----------
-HEADERS = {"User-Agent": "FundingCallsBot/1.6 (+https://github.com/)"}
-TIMEOUT = 30
-SLEEP_BETWEEN = 1.0
-
-# ---------- optional PDF backends ----------
+# ----------------------- optional PDF backends -----------------------
 PDF_BACKENDS: List[str] = []
 try:
     import pdfplumber  # type: ignore
@@ -46,367 +39,358 @@ try:
 except Exception:
     pass
 
-# ---------- optional OpenAI ----------
+# ----------------------- optional OpenAI -----------------------------
 OPENAI_ENABLED = False
 try:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     if OPENAI_API_KEY:
         import openai  # type: ignore
+
         openai.api_key = OPENAI_API_KEY
         OPENAI_ENABLED = True
 except Exception:
     OPENAI_ENABLED = False
 
-# ---------- heuristics ----------
-KEYWORDS = ("call", "grant", "fund", "funding", "proposal", "fellowship",
-            "scheme", "schemes", "research", "programme", "program", "opportunit")
-EXCLUDE_WORDS = ("faq", "faqs", "form", "forms", "guideline", "guidelines", "tender", "corrigendum")
-INDIAN_AGENCIES_HINT = ("dst","dbt","serb","icmr","csir","igstc","anrf","ugc","meity","icar","drdo","icssr","nmhs","ucost","nabard")
+# ----------------------- Config / constants --------------------------
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    )
+}
+TIMEOUT = 40
+SLEEP_BETWEEN = 1.0
 
-# ---------- helpers ----------
-def http_get(url:str) -> Optional[requests.Response]:
+KEYWORDS = (
+    "call", "proposal", "funding", "grant", "fellowship", "scheme",
+    "program", "programme", "apply", "application"
+)
+EXCLUDE = ("faq", "faqs", "form", "forms", "guideline", "guidelines")
+
+INDIAN_HINTS = (
+    "india", "indian", "dst", "dbt", "serb", "icmr", "csir", "igstc",
+    "anrf", "nmhs", "ucost", "ugc", "icar", "meity", "drdo"
+)
+
+# Add agencies here. (You can grow this list from your PDF later.)
+SOURCES: List[Dict[str, str]] = [
+    # India
+    {"agency": "DBT (Department of Biotechnology)", "url": "https://dbtindia.gov.in/latest-announcements", "base": "https://dbtindia.gov.in"},
+    {"agency": "DST (Department of Science & Technology)", "url": "https://dst.gov.in/call-for-proposals", "base": "https://dst.gov.in"},
+    {"agency": "ICMR (Indian Council of Medical Research)", "url": "https://main.icmr.nic.in/calls", "base": "https://main.icmr.nic.in"},
+    {"agency": "CSIR (Council of Scientific & Industrial Research)", "url": "https://www.csir.res.in/grants-schemes", "base": "https://www.csir.res.in"},
+    {"agency": "IGSTC (Indo-German Science & Technology Centre)", "url": "https://www.igstc.org/", "base": "https://www.igstc.org"},
+    {"agency": "ANRF (formerly SERB)", "url": "https://www.anrf.gov.in/", "base": "https://www.anrf.gov.in"},
+    {"agency": "NMHS (National Mission on Himalayan Studies)", "url": "https://nmhs.org.in/", "base": "https://nmhs.org.in"},
+    {"agency": "UCoST (Uttarakhand Council for Science & Technology)", "url": "https://ucost.uk.gov.in/", "base": "https://ucost.uk.gov.in"},
+
+    # International examples (extend as needed)
+    {"agency": "European Research Council (ERC)", "url": "https://erc.europa.eu/news-events/news", "base": "https://erc.europa.eu"},
+    {"agency": "Royal Society (UK)", "url": "https://royalsociety.org/grants-schemes-awards/grants/", "base": "https://royalsociety.org"},
+]
+
+# Optional, per-host CSS selectors for “where links usually live”
+AGENCY_SELECTORS = {
+    "dbtindia.gov.in":         "main a[href], .view-content a[href], .content a[href]",
+    "dst.gov.in":              "main a[href], .view-content a[href]",
+    "main.icmr.nic.in":        "main a[href], .page-content a[href], .content a[href]",
+    "www.csir.res.in":         "main a[href], .content a[href], .node-content a[href]",
+    "www.igstc.org":           "main a[href], .content a[href]",
+    "www.anrf.gov.in":         "main a[href], .content a[href], .view-content a[href]",
+    "nmhs.org.in":             "main a[href], .content a[href]",
+    "ucost.uk.gov.in":         "main a[href], .content a[href]",
+    "erc.europa.eu":           "main a[href], .content a[href]",
+    "royalsociety.org":        "main a[href], .content a[href], .listing a[href]",
+}
+
+# ----------------------- utils --------------------------------------
+def clean(s: str) -> str:
+    return re.sub(r"\s+", " ", s or "").strip()
+
+def absolute(base: str, href: str) -> str:
+    return urllib.parse.urljoin(base, href)
+
+def http_get(url: str) -> Optional[requests.Response]:
     try:
         r = requests.get(url, headers=HEADERS, timeout=TIMEOUT, allow_redirects=True)
         r.raise_for_status()
         return r
-    except Exception as e:
-        log.warning("GET failed %s -> %s", url, e)
+    except Exception:
         return None
 
-def absolute_url(base:str, href:str) -> str:
-    return urljoin(base, href or "")
-
-def clean(s:str) -> str:
-    return re.sub(r"\s+"," ", (s or "")).strip()
-
-def norm_key(*parts:str) -> str:
-    return "|".join(clean(p).lower() for p in parts if p)
-
-def is_pdf(url:str) -> bool:
+def is_pdf(url: str) -> bool:
     return url.lower().split("?")[0].endswith(".pdf")
 
-def india_related(agency:str, text:str) -> bool:
-    t = (agency + " " + text).lower()
-    return " india" in t or "indian" in t or any(k in t for k in INDIAN_AGENCIES_HINT)
+def india_flag(agency: str, text: str) -> str:
+    low = (agency + " " + text).lower()
+    return "yes" if (any(k in low for k in INDIAN_HINTS)) else "no"
 
-def looks_like_call(text:str="", href:str="") -> bool:
-    t = (text or "").lower()
-    h = (href or "").lower()
-    if any(x in t for x in EXCLUDE_WORDS) or any(x in h for x in EXCLUDE_WORDS):
+def looks_like_call(title: str, href: str) -> bool:
+    low = (title + " " + href).lower()
+    if any(x in low for x in EXCLUDE):
         return False
-    if any(k in t for k in KEYWORDS): return True
-    if any(re.search(rf"/{k}\b", h) for k in KEYWORDS): return True
-    if any(x in h for x in ("/call","/calls","/fund","/funding","/grants","/grant","/scheme","/schemes")): return True
-    return False
+    return any(k in low for k in KEYWORDS) or is_pdf(href)
 
-def parse_date_any(s:str) -> Optional[str]:
+# ----------------------- extraction ---------------------------------
+def try_parse_date(s: str) -> Optional[str]:
     try:
         s = re.sub(r"(\d)(st|nd|rd|th)", r"\1", s)
-        d = dateparser.parse(s, dayfirst=True, fuzzy=True)
-        return d.strftime("%Y-%m-%d") if d else None
+        dt = dateparser.parse(s, dayfirst=True, fuzzy=True)
+        return dt.strftime("%Y-%m-%d") if dt else None
     except Exception:
         return None
 
-# ---------- sources loading ----------
-def load_sources_from_pdf(pdf_path:str="data/agencies.pdf") -> List[Dict[str,str]]:
-    if not os.path.exists(pdf_path): return []
-    text = ""
-    # try pdfplumber then PyPDF2
-    try:
-        if "pdfplumber" in PDF_BACKENDS:
-            import pdfplumber  # type: ignore
-            with pdfplumber.open(pdf_path) as pdf:
-                for page in pdf.pages:
-                    text += "\n" + (page.extract_text() or "")
-        elif "pypdf2" in PDF_BACKENDS:
-            from io import BytesIO
-            from PyPDF2 import PdfReader  # type: ignore
-            with open(pdf_path,"rb") as f:
-                data = f.read()
-            reader = PdfReader(BytesIO(data))
-            for p in reader.pages:
-                try:
-                    text += "\n" + (p.extract_text() or "")
-                except Exception:
-                    pass
-    except Exception:
-        pass
-    if not text.strip(): return []
-    lines = [clean(x) for x in text.splitlines()]
-    url_re = re.compile(r"(https?://[^\s)]+)", re.I)
-    out, seen = [], set()
-    for i, ln in enumerate(lines):
-        m = url_re.search(ln)
-        if not m: continue
-        url = m.group(1).rstrip(").,;]")
-        # nearest non-empty previous line as agency
-        agency = ""
-        j = i-1
-        while j >= 0 and not agency:
-            if lines[j] and not url_re.search(lines[j]):
-                agency = lines[j]
-            j -= 1
-        if not agency:
-            try: agency = urlparse(url).netloc
-            except: agency = url
-        base = f"{urlparse(url).scheme}://{urlparse(url).netloc}" if urlparse(url).netloc else url
-        key = (agency.lower(), base.lower())
-        if key in seen: continue
-        seen.add(key)
-        out.append({"agency": agency, "url": url, "base": base})
-    return out
+def detect_area(text: str) -> Optional[str]:
+    m = text.lower()
+    if any(x in m for x in ["medical", "biomedical", "health", "medicine"]):  return "Medical Research"
+    if any(x in m for x in ["biotech", "biotechnology"]):                     return "Biotechnology"
+    if any(x in m for x in ["physics", "physical science"]):                  return "Physical Sciences"
+    if any(x in m for x in ["chemistry", "chemical"]):                        return "Chemical Sciences"
+    if any(x in m for x in ["materials", "advanced materials"]):              return "Advanced Materials"
+    if any(x in m for x in ["engineering", "technology", "innovation"]):      return "Science & Technology"
+    return None
 
-def load_sources() -> List[Dict[str,str]]:
-    # 1) sources.json
-    if os.path.exists("sources.json"):
-        try:
-            with open("sources.json","r",encoding="utf-8") as f:
-                data = json.load(f)
-            out, seen = [], set()
-            for r in data:
-                a, u, b = clean(r.get("agency","")), clean(r.get("url","")), clean(r.get("base",""))
-                if not (a and u and b): continue
-                key = (a.lower(), b.lower())
-                if key in seen: continue
-                seen.add(key); out.append({"agency":a, "url":u, "base":b})
-            if out: return out
-        except Exception as e:
-            log.warning("Failed reading sources.json: %s", e)
-    # 2) parse agencies.pdf if present
-    pdf_sources = load_sources_from_pdf()
-    if pdf_sources:
-        log.info("Loaded %d sources from data/agencies.pdf", len(pdf_sources))
-        return pdf_sources
-    # 3) minimal fallback
-    log.warning("Using fallback sources (sources.json / PDF not found)")
-    return [
-        {"agency":"DST (Department of Science & Technology)","url":"https://dst.gov.in/call-for-proposals","base":"https://dst.gov.in"},
-        {"agency":"DBT (Department of Biotechnology)","url":"https://dbtindia.gov.in/latest-announcements","base":"https://dbtindia.gov.in"},
-    ]
+def extract_fields_from_text(text: str) -> Dict[str, str]:
+    out = {"deadline": "N/A", "eligibility": "N/A", "budget": "N/A", "area": "N/A", "recurring": "no"}
 
-SOURCES = load_sources()
-
-# ---------- extraction ----------
-def extract_fields_from_text(text:str) -> Dict[str,str]:
-    details = {"deadline":"", "eligibility":"", "budgetINR":"", "area":"", "recurring":"no"}
-    # deadline
+    # Deadline
     m = re.search(r"(deadline|last date|apply by|closing date)\s*[:\-–]\s*([^\n\r;,.]+)", text, re.I)
     if m:
         candidate = clean(m.group(2))
-        details["deadline"] = parse_date_any(candidate) or candidate
-    # eligibility
+        out["deadline"] = try_parse_date(candidate) or candidate
+
+    # Eligibility
     m = re.search(r"(eligibility|who can apply)\s*[:\-–]\s*(.+?)(\n|\.|\r|$)", text, re.I)
-    if m:
-        details["eligibility"] = clean(m.group(2))
-    else:
-        m2 = re.search(r"eligibility(.{0,12})[:\-–]\s*(.+)", text, re.I)
-        if m2:
-            details["eligibility"] = clean(m2.group(2).split(". ")[0])
-    # budget
+    if m: out["eligibility"] = clean(m.group(2))
+
+    # Budget
     m = re.search(r"(budget|funding|amount|grant)\s*[:\-–]\s*([^\n\r;,.]+)", text, re.I)
     if m:
-        details["budgetINR"] = clean(m.group(2))
+        out["budget"] = clean(m.group(2))
     else:
         m2 = re.search(r"(₹|INR|EUR|€|\$|GBP|£)\s?[\d,]+(\.\d+)?", text, re.I)
-        if m2:
-            details["budgetINR"] = clean(m2.group(0))
-    # area (coarse)
-    low = text.lower()
-    if any(x in low for x in ["medical","biomedical","health","medicine"]): details["area"]="Medical Research"
-    elif any(x in low for x in ["biotech","biotechnology"]): details["area"]="Biotechnology"
-    elif "physics" in low: details["area"]="Physical Sciences"
-    elif "chemistry" in low or "chemical" in low: details["area"]="Chemical Sciences"
-    elif "engineering" in low or "technology" in low: details["area"]="Science & Technology"
-    elif "materials" in low: details["area"]="Advanced Materials"
-    elif "innovation" in low: details["area"]="Science & Innovation"
-    # recurring
-    if re.search(r"\b(annual|every year|rolling|ongoing)\b", low, re.I): details["recurring"]="yes"
-    return details
+        if m2: out["budget"] = clean(m2.group(0))
 
-def extract_from_html(url:str, html:str) -> Tuple[str, Dict[str,str], str]:
+    # Area
+    area = detect_area(text)
+    if area: out["area"] = area
+
+    # Recurring
+    if re.search(r"\b(annual|every year|rolling|ongoing|recurring)\b", text, re.I):
+        out["recurring"] = "yes"
+
+    return out
+
+def extract_from_html(url: str, html: str) -> Tuple[str, Dict[str, str], str]:
     soup = BeautifulSoup(html, "lxml")
-    # title
-    title = ""
-    if soup.find("h1"): title = soup.find("h1").get_text(strip=True)
-    elif soup.find("meta", attrs={"property":"og:title"}): title = soup.find("meta", attrs={"property":"og:title"})["content"]
-    elif soup.title: title = soup.title.get_text(strip=True)
-    title = clean(title)
-    # body text
-    for s in soup(["script","style","noscript","header","footer","nav"]): s.extract()
+    title = clean(soup.find("h1").get_text(strip=True)) if soup.find("h1") else (clean(soup.title.get_text(strip=True)) if soup.title else "")
     text = clean(soup.get_text(" "))
     details = extract_fields_from_text(text)
-    # overlay from tables/definition lists
-    for tbl in soup.find_all("table"):
-        t = clean(tbl.get_text(" "))
-        may = extract_fields_from_text(t)
-        for k,v in may.items():
-            if v and not details.get(k): details[k]=v
-    for dl in soup.find_all("dl"):
-        t = clean(dl.get_text(" "))
-        may = extract_fields_from_text(t)
-        for k,v in may.items():
-            if v and not details.get(k): details[k]=v
+
+    # Try tables for labeled data
+    for table in soup.find_all("table"):
+        t = clean(table.get_text(" "))
+        maybe = extract_fields_from_text(t)
+        for k, v in maybe.items():
+            if v != "N/A" and details.get(k, "N/A") == "N/A":
+                details[k] = v
     return title, details, text
 
-def extract_from_pdf_bytes(b:bytes) -> Tuple[str, Dict[str,str], str]:
+def extract_from_pdf_bytes(b: bytes) -> Tuple[str, Dict[str, str], str]:
     text = ""
     if "pdfplumber" in PDF_BACKENDS:
         from io import BytesIO
+        import pdfplumber  # type: ignore
         with pdfplumber.open(BytesIO(b)) as pdf:
             for page in pdf.pages[:8]:
-                try: text += "\n" + (page.extract_text() or "")
-                except Exception: pass
+                text += "\n" + (page.extract_text() or "")
     elif "pypdf2" in PDF_BACKENDS:
         from io import BytesIO
-        reader = PdfReader(BytesIO(b))  # type: ignore
+        from PyPDF2 import PdfReader  # type: ignore
+        reader = PdfReader(BytesIO(b))
         for p in reader.pages[:8]:
-            try: text += "\n" + (p.extract_text() or "")
-            except Exception: pass
+            try:
+                text += "\n" + (p.extract_text() or "")
+            except Exception:
+                pass
     text = clean(text)
-    lines = [ln for ln in text.splitlines() if clean(ln)]
-    title = clean(lines[0]) if lines else ""
+    title = clean(text.splitlines()[0]) if text else ""
     details = extract_fields_from_text(text)
     return title, details, text
 
-def ai_fill(text:str, details:Dict[str,str]) -> Dict[str,str]:
-    if not OPENAI_ENABLED or not text.strip(): return details
+def ai_enrich(text: str) -> Dict[str, str]:
+    if not OPENAI_ENABLED or not text:
+        return {}
     prompt = f"""
-Extract compact JSON with keys: deadline (YYYY-MM-DD or empty), eligibility, budgetINR, area, recurring("yes"/"no").
-If unknown, use empty string.
-TEXT:
+Return STRICT JSON with keys: deadline, eligibility, budget, area, recurring.
+Use ISO YYYY-MM-DD for deadline when possible; else "N/A".
+Text:
 {text[:12000]}
-""".strip()
+"""
     try:
-        resp = openai.ChatCompletion.create(  # type: ignore
+        resp = openai.ChatCompletion.create(
             model="gpt-4o-mini",
-            messages=[{"role":"user","content":prompt}],
-            temperature=0.0, max_tokens=300,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=300,
         )
-        content = resp["choices"][0]["message"]["content"].strip()
+        content = resp["choices"][0]["message"]["content"]
         m = re.search(r"\{.*\}", content, re.S)
-        data = json.loads(m.group(0)) if m else {}
-        for k in ("deadline","eligibility","budgetINR","area","recurring"):
-            v = clean(str(data.get(k,"")))
-            if v and not details.get(k): details[k]=v
-        # normalize date
-        if details.get("deadline"):
-            details["deadline"] = parse_date_any(details["deadline"]) or details["deadline"]
-    except Exception as e:
-        log.warning("AI fallback failed: %s", e)
-    return details
+        if not m: return {}
+        data = json.loads(m.group(0))
+        out = {}
+        for k in ("deadline", "eligibility", "budget", "area", "recurring"):
+            v = clean(str(data.get(k, "N/A")))
+            out[k] = v if v else "N/A"
+        return out
+    except Exception:
+        return {}
 
-# ---------- link discovery ----------
-def collect_links(listing_url:str, base:str) -> List[Tuple[str,str]]:
+# ----------------------- link discovery ------------------------------
+from urllib.parse import urlparse
+
+def collect_links(listing_url: str, base: str) -> List[Tuple[str, str]]:
     r = http_get(listing_url)
-    if not r: return []
+    if not r:
+        return []
+
     soup = BeautifulSoup(r.text, "lxml")
-    containers = soup.select("main a[href], article a[href], .content a[href], .view-content a[href]")
-    if not containers: containers = soup.select("a[href]")
+    links: List[Tuple[str, str]] = []
+    seen = set()
 
-    base_host = urlparse(base).netloc or urlparse(listing_url).netloc
-    results, seen = [], set()
-
-    def add(txt, href_abs):
+    def add(txt: str, href_abs: str):
         key = (clean(txt).lower(), href_abs.split("#")[0])
-        if key in seen: return
-        seen.add(key); results.append((clean(txt) or href_abs, href_abs))
+        if key not in seen:
+            seen.add(key)
+            links.append((clean(txt) or href_abs, href_abs))
 
-    # primary pass
-    for a in containers:
-        txt = clean(a.get_text(" "))
-        href = a.get("href","").strip()
-        href_abs = absolute_url(base, href)
-        if urlparse(href_abs).netloc != base_host: continue
-        if not txt and not href: continue
-        if looks_like_call(txt, href_abs) or is_pdf(href_abs):
-            add(txt, href_abs)
-
-    # fallback if too few
-    if len(results) < 6:
-        for a in soup.select("a[href]"):
-            if len(results) >= 60: break
+    # If we know a good container selector for this host, try it first
+    host = urlparse(listing_url).netloc or urlparse(base).netloc
+    sel = AGENCY_SELECTORS.get(host)
+    if sel:
+        for a in soup.select(sel):
             txt = clean(a.get_text(" "))
-            href = a.get("href","").strip()
-            href_abs = absolute_url(base, href)
-            if urlparse(href_abs).netloc != base_host: continue
-            low = (txt + " " + href_abs).lower()
-            if any(x in low for x in EXCLUDE_WORDS): continue
+            href = a.get("href", "").strip()
+            if not href:
+                continue
+            href_abs = absolute(base, href)
+            if looks_like_call(txt, href_abs):
+                add(txt, href_abs)
+        if len(links) >= 5:
+            return links[:80]
+
+    # Pass 1: strict calls (keywords / PDFs)
+    for a in soup.select("a[href]"):
+        txt = clean(a.get_text(" "))
+        href = a.get("href", "").strip()
+        if not href:
+            continue
+        href_abs = absolute(base, href)
+        if looks_like_call(txt, href_abs):
             add(txt, href_abs)
 
-    return results[:80]
+    # Pass 2: Not enough? Broaden within content areas
+    if len(links) < 5:
+        for a in soup.select("main a[href], article a[href], .content a[href], .view-content a[href]"):
+            if len(links) >= 80:
+                break
+            txt = clean(a.get_text(" "))
+            href = a.get("href", "").strip()
+            if not href:
+                continue
+            href_abs = absolute(base, href)
+            low = (txt + " " + href_abs).lower()
+            if any(x in low for x in EXCLUDE):
+                continue
+            add(txt, href_abs)
 
-# ---------- per-call parse ----------
-def parse_call(agency:str, title_guess:str, url:str) -> Dict[str,str]:
-    title, details, raw = "", {"deadline":"","eligibility":"","budgetINR":"","area":"","recurring":"no"}, ""
+    return links[:80]
+
+# ----------------------- parse a single call -------------------------
+def parse_call(agency: str, link_title: str, url: str) -> Dict[str, str]:
+    title, details, full_text = "", {"deadline": "N/A", "eligibility": "N/A", "budget": "N/A", "area": "N/A", "recurring": "no"}, ""
+
     if is_pdf(url):
         r = http_get(url)
         if r and r.content:
-            title, details, raw = extract_from_pdf_bytes(r.content)
+            title, details, full_text = extract_from_pdf_bytes(r.content)
     else:
         r = http_get(url)
         if r and r.text:
-            title, details, raw = extract_from_html(url, r.text)
-    # AI fallback if still empty
-    if OPENAI_ENABLED and (not details.get("deadline") or not details.get("eligibility") or not details.get("area")):
-        details = ai_fill(raw, details)
+            title, details, full_text = extract_from_html(url, r.text)
 
-    final_title = clean(title) or clean(title_guess) or "N/A"
-    country = "India" if india_related(agency, raw) else "Global"
+    final_title = clean(title) or clean(link_title)
 
-    # Map to your dashboard schema
+    # AI enrichment if missing and key available
+    if OPENAI_ENABLED and any(details.get(k, "N/A") == "N/A" for k in ("deadline", "eligibility", "budget", "area")):
+        enriched = ai_enrich(full_text)
+        for k, v in enriched.items():
+            if details.get(k, "N/A") == "N/A" and v and v != "N/A":
+                details[k] = v
+
+    if details.get("area") in (None, "", "N/A"):
+        maybe_area = detect_area(full_text)
+        if maybe_area:
+            details["area"] = maybe_area
+
     return {
-        "title": final_title,
-        "deadline": details.get("deadline") or "",
-        "agency": agency,
-        "area": details.get("area") or "",
-        "eligibility": details.get("eligibility") or "",
-        "budgetINR": details.get("budgetINR") or "",
-        "url": url,
-        "category": "",               # optional; keep empty or set "National/International"
-        "researchCategory": "Research Proposal",
-        "extendedDeadline": "",
-        "country": country,
-        "isRecurring": (details.get("recurring","no").lower()=="yes"),
+        "title": final_title if final_title else "N/A",
+        "deadline": details.get("deadline", "N/A"),
+        "funding_agency": agency,
+        "area": details.get("area", "N/A"),
+        "eligibility": details.get("eligibility", "N/A"),
+        "budget": details.get("budget", "N/A"),
+        "website": url,
+        "recurring": details.get("recurring", "no"),
+        "india_related": india_flag(agency, full_text),
     }
 
-def dedupe(rows:List[Dict[str,str]]) -> List[Dict[str,str]]:
-    best: Dict[str,Dict[str,str]] = {}
-    def score(r): return sum(1 for k in ("deadline","eligibility","area","budgetINR") if r.get(k))
-    for r in rows:
-        k = norm_key(r.get("title",""), r.get("agency",""))
-        if k not in best or score(r) > score(best[k]):
-            best[k] = r
+# ----------------------- dedupe & sort --------------------------------
+def dedupe(calls: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    best = {}
+    for c in calls:
+        key = (c.get("title", "").strip().lower(), c.get("funding_agency", "").strip().lower())
+        if key not in best:
+            best[key] = c
+        else:
+            def score(x: Dict[str, str]) -> int:
+                return sum(1 for k in ("deadline", "eligibility", "budget", "area") if x.get(k) and x.get(k) != "N/A")
+            if score(c) > score(best[key]):
+                best[key] = c
     return list(best.values())
 
-# ---------- main ----------
+def sortkey(c: Dict[str, str]) -> tuple:
+    d = c.get("deadline", "N/A")
+    if d == "N/A": return (1, "9999-12-31")
+    return (0, d)
+
+# ----------------------- main ----------------------------------------
 def main():
-    all_rows: List[Dict[str,str]] = []
+    all_calls: List[Dict[str, str]] = []
     for src in SOURCES:
         agency, url, base = src["agency"], src["url"], src["base"]
-        log.info("Listing: %s (%s)", agency, url)
         time.sleep(SLEEP_BETWEEN)
         pairs = collect_links(url, base)
-        log.info("  found %d candidate links", len(pairs))
-        for title_guess, href in pairs:
+        for t, href in pairs:
             try:
                 time.sleep(SLEEP_BETWEEN)
-                row = parse_call(agency, title_guess, href)
-                if len(row["title"]) < 4: continue
-                all_rows.append(row)
-            except Exception as e:
-                log.warning("parse_call failed %s -> %s", href, e)
+                call = parse_call(agency, t, href)
+                if len(call["title"]) < 4:
+                    continue
+                all_calls.append(call)
+            except Exception:
+                pass
 
-    clean_rows = dedupe(all_rows)
-    # sort by deadline asc; empties at bottom
-    def sortkey(r):
-        d = r.get("deadline") or "9999-12-31"
-        return (0, d) if r.get("deadline") else (1, d)
-    clean_rows.sort(key=sortkey)
+    clean_calls = dedupe(all_calls)
+    clean_calls.sort(key=sortkey)
 
-    # IMPORTANT: write a FLAT ARRAY (your dashboard expects this)
-    with open("data.json","w",encoding="utf-8") as f:
-        json.dump(clean_rows, f, ensure_ascii=False, indent=2)
-    log.info("Wrote %d calls -> data.json", len(clean_rows))
+    out = {
+        "updated_utc": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "calls": clean_calls,
+    }
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    print(f"Wrote {len(clean_calls)} calls to data.json")
 
 if __name__ == "__main__":
     main()
