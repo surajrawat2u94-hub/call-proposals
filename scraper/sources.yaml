@@ -1,0 +1,57 @@
+sources:
+  # ---------- INDIA (sample subset; append your full list) ----------
+  - agency: "DST (Department of Science & Technology)"
+    base: "https://dst.gov.in"
+    listing: "https://dst.gov.in/call-for-proposals"
+    country: "IN"
+
+  - agency: "DBT (Department of Biotechnology)"
+    base: "https://dbtindia.gov.in"
+    listing: "https://dbtindia.gov.in/latest-announcements"
+    country: "IN"
+
+  - agency: "ICMR (Indian Council of Medical Research)"
+    base: "https://main.icmr.nic.in"
+    listing: "https://main.icmr.nic.in/calls"
+    country: "IN"
+
+  - agency: "CSIR (Council of Scientific & Industrial Research)"
+    base: "https://www.csir.res.in"
+    listing: "https://www.csir.res.in/grants-schemes"
+    country: "IN"
+
+  - agency: "IGSTC (Indo-German Science & Technology Centre)"
+    base: "https://www.igstc.org"
+    listing: "https://www.igstc.org/"
+    country: "IN"
+
+  - agency: "SERB (Science and Engineering Research Board)"
+    base: "https://www.serbonline.in"
+    listing: "https://www.serbonline.in/SERB/homePage"
+    country: "IN"
+
+  - agency: "ANRF (formerly SERB)"
+    base: "https://anrf.gov.in"
+    listing: "https://anrf.gov.in/grants"
+    country: "IN"
+
+  - agency: "UCOST (Uttarakhand State Council for Science & Technology)"
+    base: "https://ucost.uk.gov.in"
+    listing: "https://ucost.uk.gov.in/advertisement/"
+    country: "IN"
+
+  - agency: "NMHS (National Mission on Himalayan Studies)"
+    base: "http://nmhs.org.in"
+    listing: "http://nmhs.org.in/Advertisements.aspx"
+    country: "IN"
+
+  # ---------- INTERNATIONAL (examples; extend as needed) ----------
+  - agency: "European Research Council (ERC)"
+    base: "https://erc.europa.eu"
+    listing: "https://erc.europa.eu/news-events/news"
+    country: "EU"
+
+  - agency: "Wellcome Trust (UK)"
+    base: "https://wellcome.org"
+    listing: "https://wellcome.org/grant-funding"
+    country: "UK"
