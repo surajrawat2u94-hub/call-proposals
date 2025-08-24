@@ -1,63 +1,79 @@
-#!/usr/bin/env python3
+# scraper/agent.py
 from __future__ import annotations
-import os, json, time, hashlib
-from typing import Dict, List
+import json
+import time
 import yaml
+from typing import Dict, List, Tuple
 
-from fetchers import fetch_listing_links, fetch_call_page
-from extractors import extract_structured_fields
-from normalizers import dedupe_and_sort, validate_call, is_india_related
+from .fetchers import collect_links, http_get, is_pdf_link, SLEEP_BETWEEN
+from .extractors import extract_from_html, extract_from_pdf
+from .normalizers import dedupe, truncate_title, ai_enrich
 
-DATA_JSON = "data.json"
+def get_sources() -> List[Dict[str, str]]:
+    with open("scraper/sources.yaml", "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    # expected fields in each source: name/agency, url, base
+    return data["sources"]
 
-def load_sources(path: str = "scraper/sources.yaml") -> List[Dict]:
-    with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)["sources"]
+def parse_call(agency: str, title_guess: str, url: str) -> Dict[str, str]:
+    """
+    Parse a single call (HTML or PDF). Use AI fallback when needed.
+    """
+    title, details, text_for_ai = "", {"deadline":"N/A","eligibility":"N/A","budget":"N/A","area":"N/A"}, ""
 
-def load_previous() -> Dict:
-    if not os.path.exists(DATA_JSON):
-        return {"updated_utc": "", "calls": []}
-    with open(DATA_JSON, "r", encoding="utf-8") as f:
-        return json.load(f)
+    if is_pdf_link(url):
+        title, details, text_for_ai = extract_from_pdf(url)
+    else:
+        r = http_get(url)
+        if r and r.text:
+            title, details, text_for_ai = extract_from_html(url, r.text)
 
-def main():
-    sources = load_sources()
-    prev = load_previous()
+    # AI fallback
+    if any(details.get(k, "N/A") == "N/A" for k in ("deadline","eligibility","budget","area")):
+        enriched = ai_enrich(text_for_ai)
+        for k, v in enriched.items():
+            if details.get(k, "N/A") == "N/A" and v != "N/A":
+                details[k] = v
 
-    all_calls: List[Dict] = []
-    for s in sources:
-        agency = s["agency"]
-        print(f"[agent] Listing: {agency}")
-        links = fetch_listing_links(s)
-        print(f"[agent]  -> {len(links)} candidate links")
-        for title_guess, url in links:
-            raw_page = fetch_call_page(url, s)
-            call = extract_structured_fields(
-                title_guess=title_guess,
-                page_text=raw_page["text"],
-                url=url,
-                agency=agency,
-                country=s.get("country",""),
-            )
-            if not validate_call(call):
-                continue
-            call["india_related"] = "yes" if is_india_related(call) else "no"
-            all_calls.append(call)
-            time.sleep(0.5)
+    final_title = title.strip() or title_guess.strip()
+    final_title = truncate_title(final_title, 80)
 
-    clean = dedupe_and_sort(all_calls)
-
-    out = {
-        "updated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "calls": clean,
+    return {
+        "title": final_title if final_title else "N/A",
+        "deadline": details.get("deadline", "N/A"),
+        "funding_agency": agency,
+        "area": details.get("area", "N/A"),
+        "eligibility": details.get("eligibility", "N/A"),
+        "budget": details.get("budget", "N/A"),
+        "website": url,
     }
 
-    if json.dumps(prev, sort_keys=True) != json.dumps(out, sort_keys=True):
-        with open(DATA_JSON, "w", encoding="utf-8") as f:
-            json.dump(out, f, ensure_ascii=False, indent=2)
-        print(f"[agent] Wrote {len(clean)} calls to {DATA_JSON}")
-    else:
-        print("[agent] No changes; data.json up to date")
+def run() -> None:
+    all_calls: List[Dict[str, str]] = []
+    for s in get_sources():
+        agency = s.get("agency") or s.get("name") or ""
+        url = s["url"]
+        base = s["base"]
+        links = collect_links(url, base)
+
+        for title_guess, href in links[:100]:
+            try:
+                call = parse_call(agency, title_guess, href)
+                if len(call["title"]) >= 4:
+                    all_calls.append(call)
+                time.sleep(SLEEP_BETWEEN)
+            except Exception:
+                continue
+
+    final = dedupe(all_calls)
+    def s_key(c: Dict[str, str]):
+        d = c.get("deadline", "N/A")
+        return ("1", "9999-12-31") if d == "N/A" else ("0", d)
+    final.sort(key=s_key)
+
+    out = {"updated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "calls": final}
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
-    main()
+    run()
