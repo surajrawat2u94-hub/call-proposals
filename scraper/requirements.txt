@@ -2,7 +2,6 @@ requests
 beautifulsoup4
 lxml
 python-dateutil
+PyYAML
 pdfplumber
 PyPDF2
-PyYAML
-openai  # optional; used only if OPENAI_API_KEY is set
