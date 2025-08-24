@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2025-08-24T01:29:10Z",
+  "updated_utc": "2025-08-24T11:24:26Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -8,370 +8,52 @@
       "area": "Advanced Materials",
       "eligibility": "N/A",
       "budget": "N/A",
-      "website": "https://dst.gov.in/archive-call-for-proposals",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
+      "website": "https://dst.gov.in/archive-call-for-proposals"
     },
     {
       "title": "Synergy Grant",
       "deadline": "2025-05-04",
-      "funding_agency": "European Research Council (ERC)",
+      "funding_agency": "European Research Council",
       "area": "Science & Innovation",
       "eligibility": "N/A",
-      "budget": "Collaborative Research Funding Opportunities Skip to main content Main navigation Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant For Non-European Researchers Panel members Independent observers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public engagement with research Projects & statistics ERC dashboard Science stories Mapping ERC frontier research: an overview Scientific prizes News & events News Events Magazine ERC publications Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Main navigation MOBILE Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant Panel members Independent observers For non-EU researchers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public Engagement with Research Award News & events News Events Magazine ERC publications Projects & statistics ERC dashboard Science stories Scientific prizes Mapping ERC frontier research Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Breadcrumb Homepage Apply for a grant Synergy Grant Synergy Grant Are you a researcher that wants to address a research problem so ambitious",
-      "website": "https://erc.europa.eu/apply-grant/synergy-grant",
-      "recurring": "yes",
-      "country": "EU",
-      "india_related": "no"
+      "budget": "€ 10",
+      "website": "https://erc.europa.eu/apply-grant/synergy-grant"
     },
     {
-      "title": "Advanced Grant",
-      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "Physical Sciences",
+      "title": "International Cooperation Division",
+      "deadline": "2025-08-16",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "Funding for Established Research Leaders Skip to main content Main navigation Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant For Non-European Researchers Panel members Independent observers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public engagement with research Projects & statistics ERC dashboard Science stories Mapping ERC frontier research: an overview Scientific prizes News & events News Events Magazine ERC publications Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Main navigation MOBILE Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant Panel members Independent observers For non-EU researchers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public Engagement with Research Award News & events News Events Magazine ERC publications Projects & statistics ERC dashboard Science stories Scientific prizes Mapping ERC frontier research Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Breadcrumb Homepage Apply for a grant Advanced Grant Advanced Grant Are you an established",
-      "website": "https://erc.europa.eu/apply-grant/advanced-grant",
-      "recurring": "yes",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "Consolidator Grant",
-      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "Physical Sciences",
-      "eligibility": "N/A",
-      "budget": "Funding for Emerging Research Leaders Skip to main content Main navigation Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant For Non-European Researchers Panel members Independent observers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public engagement with research Projects & statistics ERC dashboard Science stories Mapping ERC frontier research: an overview Scientific prizes News & events News Events Magazine ERC publications Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Main navigation MOBILE Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant Panel members Independent observers For non-EU researchers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public Engagement with Research Award News & events News Events Magazine ERC publications Projects & statistics ERC dashboard Science stories Scientific prizes Mapping ERC frontier research Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Breadcrumb Homepage Apply for a grant Consolidator Grant Consolidator Grant Are you a scientist who wants to consolidate your independence by establishing a research team and continuing to develop a success career in Europe? The ERC Consolidator Grant could be for you",
-      "website": "https://erc.europa.eu/apply-grant/consolidator-grant",
-      "recurring": "yes",
-      "country": "EU",
-      "india_related": "no"
+      "budget": "N/A",
+      "website": "https://aistic.gov.in/ASEAN/ICDST"
     },
     {
       "title": "Starting Grant",
       "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "Physical Sciences",
-      "eligibility": "N/A",
-      "budget": "Funding Opportunities for Early-Career Researchers Skip to main content Main navigation Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant For Non-European Researchers Panel members Independent observers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public engagement with research Projects & statistics ERC dashboard Science stories Mapping ERC frontier research: an overview Scientific prizes News & events News Events Magazine ERC publications Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Main navigation MOBILE Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant Panel members Independent observers For non-EU researchers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public Engagement with Research Award News & events News Events Magazine ERC publications Projects & statistics ERC dashboard Science stories Scientific prizes Mapping ERC frontier research Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Breadcrumb Homepage Apply for a grant Starting Grant Starting Grant Are you a talented early-career scientist who has already produced excellent supervised work",
-      "website": "https://erc.europa.eu/apply-grant/starting-grant",
-      "recurring": "yes",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "#ADVANCED GRANTS",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A2027",
-      "recurring": "no",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "#RESEARCH FUNDING",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94",
-      "recurring": "no",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "Apply for a grant",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "Science & Innovation",
-      "eligibility": "N/A",
-      "budget": "Secure Funding for Frontier Research Skip to main content Main navigation Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant For Non-European Researchers Panel members Independent observers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public engagement with research Projects & statistics ERC dashboard Science stories Mapping ERC frontier research: an overview Scientific prizes News & events News Events Magazine ERC publications Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Main navigation MOBILE Home Apply for a grant Starting Grant Consolidator Grant Advanced Grant Proof of Concept Synergy Grant Panel members Independent observers For non-EU researchers Additional opportunities Science Journalism Initiative ERC for Ukraine Manage your project Set-up & develop your team Project Reporting Open Science Ethics guidance Intellectual property rights Communicate your research Public Engagement with Research Award News & events News Events Magazine ERC publications Projects & statistics ERC dashboard Science stories Scientific prizes Mapping ERC frontier research Support Contact us Document library Logos Public access to documents About the ERC ERC at a glance ERC President & Scientific Council Thematic working groups Standing committees ERC Executive Agency Work with us Tender opportunities ERC legal basis Search Breadcrumb Homepage Apply for a grant Apply for a grant Which ERC grant scheme is best suited for your research project? Find out more about our funding opportunities and open calls",
-      "website": "https://erc.europa.eu/apply-grant",
-      "recurring": "no",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "Call for Proposal for 'Advanced Manufacturing Technologies (AMT) Program' under the Technology Translation & Innovation Division, DST, Government of India, Last date extended till 31st August, 2025",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Advanced Materials",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/callforproposals/call-proposal-advanced-manufacturing-technologies-amt-program-under-technology",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
-    },
-    {
-      "title": "Call for Proposal for 'Waste Management Technologies (WMT) Program' under the Technology Translation & Innovation Division, DST, Government of India, Last date extended till 31st August, 2025",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
+      "funding_agency": "European Research Council",
       "area": "Science & Technology",
       "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/callforproposals/call-proposal-waste-management-technologies-wmt-program-under-technology",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
+      "budget": "€1.5",
+      "website": "https://erc.europa.eu/apply-grant/starting-grant"
     },
     {
-      "title": "Call for Proposals",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
+      "title": "Consolidator Grant",
+      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
+      "funding_agency": "European Research Council",
       "area": "Science & Technology",
       "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/call-for-proposals",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
+      "budget": "€2",
+      "website": "https://erc.europa.eu/apply-grant/consolidator-grant"
     },
     {
-      "title": "Communicate your research",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council (ERC)",
+      "title": "Advanced Grant",
+      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
+      "funding_agency": "European Research Council",
       "area": "Science & Technology",
       "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://erc.europa.eu/manage-your-project/communicate-your-research",
-      "recurring": "yes",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "Discovery Research",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "£73",
-      "website": "https://wellcome.org/our-priorities/discovery-research",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "Find a funding opportunity",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://wellcome.org/research-funding/schemes",
-      "recurring": "yes",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "For Non-European Researchers",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "€2.5",
-      "website": "https://erc.europa.eu/apply-grant/non-european-researchers",
-      "recurring": "no",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "Funded grants",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://wellcome.org/research-funding/funding-portfolio/funded-grants",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "Funding guidance",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://wellcome.org/research-funding/guidance",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "Funding policies and grant conditions",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://wellcome.org/research-funding/guidance/policies-grant-conditions",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "Funding portfolio: funded people and projects",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "£16",
-      "website": "https://wellcome.org/research-funding/funding-portfolio",
-      "recurring": "yes",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "INDIA-JAPAN Cooperative Science Programme (IJCSP) Call for Proposals-2025",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Advanced Materials",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/callforproposals/india-japan-cooperative-science-programme-ijcsp-call-proposals-2025",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
-    },
-    {
-      "title": "India-Sweden Collaborative Industrial Research & Development Programme - Request for Proposal (RFP) 2025",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Advanced Materials",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/callforproposals/india-sweden-collaborative-industrial-research-development-programme-request",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
-    },
-    {
-      "title": "Investments",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "£37.6",
-      "website": "https://wellcome.org/about-us/investments",
-      "recurring": "yes",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "Login Template Title",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://login-funding.wellcome.org/s/login/",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "Login to Wellcome Funding",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://funding.wellcome.org",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "Mapping ERC frontier research: an overview",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://erc.europa.eu/projects-statistics/mapping-erc-frontier-research-overview",
-      "recurring": "no",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "News and views",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "£86",
-      "website": "https://wellcome.org/news/all?f%5B0%5D=news_article_type%3Aresearcher_story",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "Programmes",
-      "deadline": "N/A",
-      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
-      "area": "Advanced Materials",
-      "eligibility": "N/A",
-      "budget": "₹ 350",
-      "website": "https://www.igstc.org/home/projects_call_text",
-      "recurring": "yes",
-      "country": "IN",
-      "india_related": "yes"
-    },
-    {
-      "title": "Public Engagement with Research Award",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council (ERC)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "€10,000",
-      "website": "https://erc.europa.eu/manage-your-project/public-engagement-research-award",
-      "recurring": "yes",
-      "country": "EU",
-      "india_related": "no"
-    },
-    {
-      "title": "RDI Scheme",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Science & Technology",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/rdi-scheme",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
-    },
-    {
-      "title": "Research & Development Programmes",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Science & Technology",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/research-development-programmes",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
-    },
-    {
-      "title": "Research funding",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "£16",
-      "website": "https://wellcome.org/research-funding",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
+      "budget": "€ 2.5",
+      "website": "https://erc.europa.eu/apply-grant/advanced-grant"
     },
     {
       "title": "Schemes/ Programmes",
@@ -380,22 +62,241 @@
       "area": "Science & Technology",
       "eligibility": "N/A",
       "budget": "N/A",
-      "website": "https://dst.gov.in/schemes-programmes",
-      "recurring": "no",
-      "country": "IN",
-      "india_related": "yes"
+      "website": "https://dst.gov.in/schemes-programmes"
     },
     {
-      "title": "Science to solve the urgent health challenges facing everyone",
+      "title": "Human Capacity Building Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/human-capacity-building-programmes"
+    },
+    {
+      "title": "Institutional Capacity Building Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/institutional-capacity-building-programmes"
+    },
+    {
+      "title": "Research & Development Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/research-development-programmes"
+    },
+    {
+      "title": "Innovation and Technology Development Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/innovation-and-technology-development-programmes"
+    },
+    {
+      "title": "Science for Society Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/science-society-programmes"
+    },
+    {
+      "title": "RDI Scheme",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/rdi-scheme"
+    },
+    {
+      "title": "Call for Proposals",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/call-for-proposals"
+    },
+    {
+      "title": "India-Sweden Collaborative Industrial Research & Development Programme - Request for Proposal (RF...",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Advanced Materials",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals/india-sweden-collaborative-industrial-research-development-programme-request"
+    },
+    {
+      "title": "INDIA-JAPAN Cooperative Science Programme (IJCSP) Call for Proposals-2025",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Advanced Materials",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals/india-japan-cooperative-science-programme-ijcsp-call-proposals-2025"
+    },
+    {
+      "title": "Call for Proposal for 'Advanced Manufacturing Technologies (AMT) Program' under the Technology Tr...",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Advanced Materials",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals/call-proposal-advanced-manufacturing-technologies-amt-program-under-technology"
+    },
+    {
+      "title": "Call for Proposal for 'Waste Management Technologies (WMT) Program' under the Technology Translat...",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals/call-proposal-waste-management-technologies-wmt-program-under-technology"
+    },
+    {
+      "title": "Programmes",
+      "deadline": "N/A",
+      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
+      "area": "Advanced Materials",
+      "eligibility": "N/A",
+      "budget": "₹ 350",
+      "website": "https://www.igstc.org/home/projects_call_text"
+    },
+    {
+      "title": "IGSTC Women Involvement in Science and Engineering Research (WISER) Call 2025 – Result IGSTC is p...",
+      "deadline": "N/A",
+      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://www.igstc.org/images/announcements/175255937320250715.pdf"
+    },
+    {
+      "title": "IGSTC Paired Early Career Fellowship in Applied Research (PECFAR) Call 2025 - Results IGSTC is pl...",
+      "deadline": "N/A",
+      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://www.igstc.org/images/announcements/174955286620250610.pdf"
+    },
+    {
+      "title": "IGSTC INDUSTRIAL FELLOWSHIP CALL 2025 - RESULTS IGSTC is pleased to announce the results of IGSTC...",
+      "deadline": "N/A",
+      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
+      "area": "Biotechnology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://www.igstc.org/images/announcements/174790215620250522.pdf"
+    },
+    {
+      "title": "Apply for a grant",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Science & Innovation",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://erc.europa.eu/apply-grant"
+    },
+    {
+      "title": "Tags",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "€2.7",
+      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
+    },
+    {
+      "title": "Research funding",
       "deadline": "N/A",
       "funding_agency": "Wellcome Trust (UK)",
       "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "£1.57",
-      "website": "https://wellcome.org#funding-guidance-8546",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
+      "budget": "£16",
+      "website": "https://wellcome.org/research-funding"
+    },
+    {
+      "title": "Find a funding opportunity",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/schemes"
+    },
+    {
+      "title": "Funding guidance",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/guidance"
+    },
+    {
+      "title": "Funding portfolio: funded people and projects",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£16",
+      "website": "https://wellcome.org/research-funding/funding-portfolio"
+    },
+    {
+      "title": "Funded grants",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/funding-portfolio/funded-grants"
+    },
+    {
+      "title": "Login to Wellcome Funding",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://funding.wellcome.org"
+    },
+    {
+      "title": "Investments",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£37.6",
+      "website": "https://wellcome.org/about-us/investments"
+    },
+    {
+      "title": "Login Template Title",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://login-funding.wellcome.org/s/login/"
+    },
+    {
+      "title": "Our priorities",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£16",
+      "website": "https://wellcome.org/what-we-do"
     },
     {
       "title": "Wellcome Funding",
@@ -404,34 +305,7 @@
       "area": "N/A",
       "eligibility": "N/A",
       "budget": "N/A",
-      "website": "https://funding.wellcome.org",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "What we do and don’t fund in discovery research",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://wellcome.org/research-funding/guidance/prepare-to-apply/discovery-research-schemes-remit",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
-    },
-    {
-      "title": "What we do and don’t fund in mental health",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "£16",
-      "website": "https://wellcome.org/research-funding/guidance/what-we-do-and-dont-fund-mental-health",
-      "recurring": "no",
-      "country": "UK",
-      "india_related": "no"
+      "website": "https://funding.wellcome.org"
     }
   ]
 }
