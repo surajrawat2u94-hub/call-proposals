@@ -1,189 +1,145 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Call Proposals Management System</title>
-
-<!-- minimal modern reset -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f172a;
-    --panel: #111827;
-    --fg: #e5e7eb;
-    --muted: #9ca3af;
-    --accent: #60a5fa;
-    --border: #1f2937;
-    --row: #0b1220;
-    --rowAlt: #0f172a;
-  }
-  html,body { margin:0; font-family: ui-sans-serif,system-ui,-apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji"; background: var(--bg); color: var(--fg); }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-
-  .container { max-width: 1200px; margin: 18px auto; padding: 0 14px; }
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
-
-  h1 { font-size: 1.25rem; margin: 0 0 4px; }
-  .meta { color: var(--muted); font-size: .9rem; margin-bottom: 12px; }
-
-  .toolbar { display:flex; gap:10px; align-items:center; flex-wrap: wrap; margin-bottom: 12px; }
-  .toolbar input[type="search"] { background:#0b1220; border:1px solid var(--border); color:var(--fg); padding:8px 10px; border-radius:8px; width:260px; }
-  .toolbar label { font-size:.9rem; color:var(--muted); display:flex; gap:6px; align-items:center; }
-  .pill { background:#0b1220; border:1px solid var(--border); color:var(--muted); padding:6px 10px; border-radius:999px; font-size:.85rem; }
-
-  table { width:100%; border-collapse: collapse; }
-  thead th { position: sticky; top: 0; z-index:1; background: var(--panel); }
-  th, td { text-align:left; border-bottom:1px solid var(--border); padding:10px; vertical-align: top; }
-  tbody tr:nth-child(odd) { background: var(--row); }
-  tbody tr:nth-child(even){ background: var(--rowAlt); }
-
-  .title-cell { max-width: 520px; }
-  .title-clamp {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;                 /* clamp to 2 lines */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .col-deadline     { width: 9rem; }
-  .col-agency       { width: 14rem; }
-  .col-area         { width: 12rem; }
-  .col-eligibility  { width: 14rem; }
-  .col-budget       { width: 10rem; }
-  .col-website      { width: 6rem;  white-space: nowrap; }
-
-  .btn { background: var(--accent); color:#0b1220; border: none; padding: 8px 12px; border-radius: 8px; cursor:pointer; }
-  .btn:hover { opacity:.95; }
+  body{ background:#0f172a; color:#e2e8f0; }
+  .card{ background:#111827; border-color:#1f2937; }
+  .table{ color:#e5e7eb; }
+  .table thead th{ color:#cbd5e1; border-bottom:1px solid #334155; }
+  .table tbody td{ border-top:1px solid #1f2937; vertical-align: middle; }
+  .truncate{ max-width:400px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pill{ padding:.15rem .5rem; border-radius:9999px; font-size:.75rem; background:#1e293b; color:#93c5fd; }
 </style>
 </head>
-<body>
-  <div class="container">
-    <div class="panel">
-      <h1>Call Proposals Management System</h1>
-      <div class="meta" id="meta"></div>
-
-      <div class="toolbar">
-        <input id="q" type="search" placeholder="Search title / agency / area / eligibility…" />
-        <label><input id="f_future" type="checkbox" /> Show only future deadlines</label>
-        <label><input id="f_india" type="checkbox" /> India-related proposals only</label>
-        <span class="pill" id="count">Total 0</span>
-        <button class="btn" id="csv">Export to CSV</button>
-      </div>
-
-      <div class="tablewrap">
-        <table id="tbl">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th class="col-deadline">Deadline</th>
-              <th class="col-agency">Funding Agency</th>
-              <th class="col-area">Area</th>
-              <th class="col-eligibility">Eligibility</th>
-              <th class="col-budget">Funding/Budget (INR)</th>
-              <th class="col-website">Website</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
+<body class="py-4">
+<div class="container">
+  <div class="d-flex align-items-center mb-3">
+    <h3 class="me-3">Call Proposals Management System</h3>
+    <span id="updated" class="pill"></span>
+    <div class="ms-auto">
+      <button id="exportCsv" class="btn btn-primary btn-sm">Export to CSV</button>
     </div>
   </div>
 
+  <div class="card p-3 mb-3">
+    <div class="row g-2">
+      <div class="col-md-5">
+        <input id="q" class="form-control form-control-sm" placeholder="Search title / agency / area / eligibility..." />
+      </div>
+      <div class="col-md-7 d-flex align-items-center gap-3">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="fFuture">
+          <label class="form-check-label" for="fFuture">Show only future deadlines</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="fIndia" checked>
+          <label class="form-check-label" for="fIndia">India-related proposals only</label>
+        </div>
+        <span class="pill ms-auto">Total <span id="total">0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="tbl">
+        <thead>
+          <tr>
+            <th style="min-width:380px">Title</th>
+            <th>Deadline</th>
+            <th>Funding Agency</th>
+            <th>Area</th>
+            <th>Eligibility</th>
+            <th>Funding/Budget (INR)</th>
+            <th>Website</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script>
-async function loadData() {
-  const r = await fetch('data.json', {cache:'no-store'});
-  if (!r.ok) throw new Error('data.json not found');
-  return await r.json();
+let DATA = {updated_utc:"", calls:[]};
+
+fetch("data.json?ts="+Date.now())
+  .then(r => r.json())
+  .then(d => { DATA = d; init(); })
+  .catch(() => { document.querySelector("#updated").innerText = "data.json not found"; });
+
+function init(){
+  document.querySelector("#updated").innerText = "Updated: " + (DATA.updated_utc || "—");
+  const q = document.querySelector("#q");
+  const fFuture = document.querySelector("#fFuture");
+  const fIndia  = document.querySelector("#fIndia");
+  const render = ()=> renderRows(filterRows(q.value, fFuture.checked, fIndia.checked));
+  q.addEventListener("input", render);
+  fFuture.addEventListener("change", render);
+  fIndia.addEventListener("change", render);
+  render();
+
+  document.querySelector("#exportCsv").onclick = ()=>{
+    const rows = filterRows(q.value, fFuture.checked, fIndia.checked);
+    const csv = toCSV(rows);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+    a.download = "calls.csv";
+    a.click();
+  };
 }
 
-const esc = s => (s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-const fmtDate = iso => iso && iso!=='N/A' ? iso : 'N/A';
-
-function csv(rows) {
-  const escape = v => `"${String(v??'').replace(/"/g,'""')}"`;
-  const head = ["Title","Deadline","Funding Agency","Area","Eligibility","Funding/Budget","Website"];
-  const lines = [ head.map(escape).join(',') ];
-  for (const r of rows) {
-    lines.push([r.title,r.deadline,r.funding_agency,r.area,r.eligibility,r.budget,r.website].map(escape).join(','));
-  }
-  return lines.join('\r\n');
-}
-
-function render(rows){
-  const tb = document.querySelector('#tbl tbody');
-  tb.innerHTML = rows.map(r => `
-    <tr>
-      <td class="title-cell" title="${esc(r.title)}"><span class="title-clamp">${esc(r.title)}</span></td>
-      <td class="col-deadline">${esc(fmtDate(r.deadline))}</td>
-      <td class="col-agency">${esc(r.funding_agency||'N/A')}</td>
-      <td class="col-area">${esc(r.area||'N/A')}</td>
-      <td class="col-eligibility">${esc(r.eligibility||'N/A')}</td>
-      <td class="col-budget">${esc(r.budget||'N/A')}</td>
-      <td class="col-website"><a href="${esc(r.website)}" target="_blank" rel="noopener">Visit</a></td>
-    </tr>
-  `).join('');
-  document.querySelector('#count').textContent = `Total ${rows.length}`;
-}
-
-function applyFilters(all) {
-  const q = document.querySelector('#q').value.trim().toLowerCase();
-  const fFuture = document.querySelector('#f_future').checked;
-  const fIndia = document.querySelector('#f_india').checked;
-  let rows = all.slice();
-
-  if (q) {
-    rows = rows.filter(r => {
-      const hay = `${r.title} ${r.funding_agency} ${r.area} ${r.eligibility}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }
-  if (fFuture) {
-    const today = new Date().toISOString().slice(0,10);
-    rows = rows.filter(r => r.deadline && r.deadline !== 'N/A' && r.deadline >= today);
-  }
-  if (fIndia) {
-    rows = rows.filter(r => (r.india_related||'no') === 'yes');
-  }
-
-  // sort: nearest upcoming first; N/A bottom
-  rows.sort((a,b) => {
-    const ad = a.deadline === 'N/A' ? '9999-12-31' : a.deadline;
-    const bd = b.deadline === 'N/A' ? '9999-12-31' : b.deadline;
-    return ad.localeCompare(bd);
+function filterRows(query, onlyFuture, indiaOnly){
+  const term = (query||"").toLowerCase();
+  const today = new Date().toISOString().slice(0,10);
+  return DATA.calls.filter(c=>{
+    if(indiaOnly && c.india_related !== "yes") return false;
+    if(onlyFuture && c.deadline && c.deadline !== "N/A" && c.deadline < today) return false;
+    const hay = (c.title+" "+c.funding_agency+" "+(c.area||"")+" "+(c.eligibility||"")).toLowerCase();
+    return !term || hay.includes(term);
   });
-
-  return rows;
 }
 
-(async function(){
-  try {
-    const data = await loadData();
-    document.querySelector('#meta').textContent = `Updated: ${data.updated_utc || ''}`;
-    const all = (data.calls||[]);
+function renderRows(rows){
+  const tbody = document.querySelector("#tbl tbody");
+  tbody.innerHTML = "";
+  document.querySelector("#total").innerText = rows.length;
 
-    const update = () => render(applyFilters(all));
-    ['#q','#f_future','#f_india'].forEach(sel => {
-      document.querySelector(sel).addEventListener('input', update);
-      document.querySelector(sel).addEventListener('change', update);
-    });
-
-    document.querySelector('#csv').addEventListener('click', () => {
-      const rows = applyFilters(all);
-      const blob = new Blob([csv(rows)], {type: 'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = Object.assign(document.createElement('a'), {href:url, download:'calls.csv'});
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    update();
-  } catch (e) {
-    console.error(e);
-    document.querySelector('#meta').textContent = 'Error: failed to load data.json';
+  for(const c of rows){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="truncate" title="${esc(c.title)}">${esc(c.title)}</td>
+      <td>${esc(c.deadline||"N/A")}</td>
+      <td class="truncate" title="${esc(c.funding_agency)}">${esc(c.funding_agency)}</td>
+      <td>${esc(c.area||"N/A")}</td>
+      <td class="truncate" title="${esc(c.eligibility||"N/A")}">${esc((c.eligibility||"N/A").slice(0,80))}${(c.eligibility||"").length>80?"…":""}</td>
+      <td>${esc(c.budget||"N/A")}</td>
+      <td><a href="${esc(c.website)}" target="_blank" rel="noopener">Visit</a></td>`;
+    tbody.appendChild(tr);
   }
-})();
+}
+
+function esc(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m])); }
+
+function toCSV(rows){
+  const head = ["Title","Deadline","Funding Agency","Area","Eligibility","Budget","Website"];
+  const lines = [head.join(",")];
+  for(const c of rows){
+    const arr = [c.title,c.deadline,c.funding_agency,c.area,c.eligibility,c.budget,c.website].map(v=>csvCell(v||""));
+    lines.push(arr.join(","));
+  }
+  return lines.join("\n");
+}
+function csvCell(v){
+  v = (""+v).replace(/"/g,'""');
+  if(/[,"\n]/.test(v)) return `"${v}"`;
+  return v;
+}
 </script>
 </body>
 </html>
