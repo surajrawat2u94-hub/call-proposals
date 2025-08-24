@@ -1,57 +1,26 @@
-sources:
-  # ---------- INDIA (sample subset; append your full list) ----------
-  - agency: "DST (Department of Science & Technology)"
-    base: "https://dst.gov.in"
-    listing: "https://dst.gov.in/call-for-proposals"
-    country: "IN"
-
-  - agency: "DBT (Department of Biotechnology)"
-    base: "https://dbtindia.gov.in"
-    listing: "https://dbtindia.gov.in/latest-announcements"
-    country: "IN"
-
-  - agency: "ICMR (Indian Council of Medical Research)"
-    base: "https://main.icmr.nic.in"
-    listing: "https://main.icmr.nic.in/calls"
-    country: "IN"
-
-  - agency: "CSIR (Council of Scientific & Industrial Research)"
-    base: "https://www.csir.res.in"
-    listing: "https://www.csir.res.in/grants-schemes"
-    country: "IN"
-
-  - agency: "IGSTC (Indo-German Science & Technology Centre)"
-    base: "https://www.igstc.org"
-    listing: "https://www.igstc.org/"
-    country: "IN"
-
-  - agency: "SERB (Science and Engineering Research Board)"
-    base: "https://www.serbonline.in"
-    listing: "https://www.serbonline.in/SERB/homePage"
-    country: "IN"
-
-  - agency: "ANRF (formerly SERB)"
-    base: "https://anrf.gov.in"
-    listing: "https://anrf.gov.in/grants"
-    country: "IN"
-
-  - agency: "UCOST (Uttarakhand State Council for Science & Technology)"
-    base: "https://ucost.uk.gov.in"
-    listing: "https://ucost.uk.gov.in/advertisement/"
-    country: "IN"
-
-  - agency: "NMHS (National Mission on Himalayan Studies)"
-    base: "http://nmhs.org.in"
-    listing: "http://nmhs.org.in/Advertisements.aspx"
-    country: "IN"
-
-  # ---------- INTERNATIONAL (examples; extend as needed) ----------
-  - agency: "European Research Council (ERC)"
-    base: "https://erc.europa.eu"
-    listing: "https://erc.europa.eu/news-events/news"
-    country: "EU"
-
-  - agency: "Wellcome Trust (UK)"
-    base: "https://wellcome.org"
-    listing: "https://wellcome.org/grant-funding"
-    country: "UK"
+# Add or edit sources freely (agency/url/base)
+# Keep list concise; your workflow is scheduled daily.
+- agency: DST (Department of Science & Technology)
+  url: https://dst.gov.in/call-for-proposals
+  base: https://dst.gov.in
+- agency: DBT (Department of Biotechnology)
+  url: https://dbtindia.gov.in/latest-announcements
+  base: https://dbtindia.gov.in
+- agency: ICMR (Indian Council of Medical Research)
+  url: https://main.icmr.nic.in/calls
+  base: https://main.icmr.nic.in
+- agency: IGSTC (Indo-German Science & Technology Centre)
+  url: https://www.igstc.org/
+  base: https://www.igstc.org
+- agency: SERB (Science and Engineering Research Board)
+  url: https://www.serbonline.in/SERB/HomePage
+  base: https://www.serbonline.in
+- agency: UGC (University Grants Commission)
+  url: https://www.ugc.ac.in/
+  base: https://www.ugc.ac.in
+- agency: European Research Council
+  url: https://erc.europa.eu/news-events/news
+  base: https://erc.europa.eu
+- agency: Wellcome Trust (UK)
+  url: https://wellcome.org/grant-funding/schemes
+  base: https://wellcome.org
