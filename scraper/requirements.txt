@@ -3,7 +3,6 @@ beautifulsoup4
 lxml
 python-dateutil
 pdfplumber
-pydantic
+PyPDF2
 PyYAML
-playwright
-openai
+openai  # optional; used only if OPENAI_API_KEY is set
