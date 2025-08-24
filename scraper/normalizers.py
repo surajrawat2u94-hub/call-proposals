@@ -1,31 +1,70 @@
+# scraper/normalizers.py
 from __future__ import annotations
-import re
+import os
+import json
 from typing import Dict, List, Tuple
 
-def _norm(s: str) -> str:
-    return re.sub(r"\s+", " ", (s or "")).strip().lower()
+def norm_key(*parts: str) -> str:
+    return "|".join(p.strip().lower() for p in parts if p)
 
-def is_india_related(call: Dict) -> bool:
-    t = (call.get("funding_agency","") + " " + call.get("area","")).lower()
-    return call.get("country") == "IN" or ("india" in t or "indian" in t)
+def truncate_title(title: str, max_len: int = 80) -> str:
+    t = (title or "").strip()
+    return (t[: max_len - 1] + "…") if len(t) > max_len else t
 
-def validate_call(c: Dict) -> bool:
-    return len(_norm(c.get("title",""))) >= 4 and c.get("website","").startswith("http")
-
-def _score(c: Dict) -> int:
-    return sum(1 for k in ("deadline","eligibility","budget","area") if c.get(k) and c[k] != "N/A")
-
-def dedupe_and_sort(calls: List[Dict]) -> List[Dict]:
-    seen = {}
+def dedupe(calls: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """
+    Deduplicate by (title + agency). Prefer the record with more filled fields.
+    """
+    seen: Dict[str, Dict[str, str]] = {}
     for c in calls:
-        key = _norm(c.get("title","")) + "|" + _norm(c.get("funding_agency",""))
-        if key not in seen or _score(c) > _score(seen[key]):
+        key = norm_key(c.get("title", ""), c.get("funding_agency", ""))
+        if key not in seen:
             seen[key] = c
+        else:
+            def score(x: Dict[str, str]) -> int:
+                return sum(1 for k in ("deadline", "eligibility", "budget", "area") if x.get(k) and x.get(k) != "N/A")
+            if score(c) > score(seen[key]):
+                seen[key] = c
+    return list(seen.values())
 
-    out = list(seen.values())
+# -------------- optional AI fallback -------------- #
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+AI_ENABLED = False
+try:
+    if OPENAI_API_KEY:
+        import openai  # type: ignore
+        openai.api_key = OPENAI_API_KEY
+        AI_ENABLED = True
+except Exception:
+    AI_ENABLED = False
 
-    def sortkey(x: Dict) -> Tuple[int, str, str]:
-        d = x.get("deadline","N/A")
-        return (0 if d != "N/A" else 1, d, _norm(x.get("title","")))
-    out.sort(key=sortkey)
-    return out
+def ai_enrich(text: str) -> Dict[str, str]:
+    if not AI_ENABLED or not text:
+        return {}
+    prompt = f"""
+Extract the following fields from the funding-call text.
+Return STRICT JSON with keys: deadline, eligibility, budget, area.
+- deadline must be YYYY-MM-DD if possible, else "N/A"
+- eligibility concise one-liner
+- budget a short amount or "N/A"
+- area: Medical Research / Biotechnology / Science & Technology / Physical Sciences / Chemical Sciences / Advanced Materials / Science & Innovation
+
+Text:
+{text[:12000]}
+"""
+    try:
+        resp = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=300,
+        )
+        content = resp["choices"][0]["message"]["content"]
+        j = json.loads(content[content.find("{"): content.rfind("}")+1])
+        out = {}
+        for k in ("deadline", "eligibility", "budget", "area"):
+            v = str(j.get(k, "N/A")).strip()
+            out[k] = v if v else "N/A"
+        return out
+    except Exception:
+        return {}
