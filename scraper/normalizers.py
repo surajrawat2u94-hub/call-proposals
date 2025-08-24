@@ -1,70 +1,43 @@
-# scraper/normalizers.py
 from __future__ import annotations
-import os
 import json
+import time
 from typing import Dict, List, Tuple
 
-def norm_key(*parts: str) -> str:
-    return "|".join(p.strip().lower() for p in parts if p)
 
-def truncate_title(title: str, max_len: int = 80) -> str:
-    t = (title or "").strip()
-    return (t[: max_len - 1] + "…") if len(t) > max_len else t
+def _key(c: Dict[str, str]) -> str:
+    t = (c.get("title") or "").strip().lower()
+    a = (c.get("funding_agency") or "").strip().lower()
+    return f"{t}|{a}"
+
+
+def _score(c: Dict[str, str]) -> int:
+    return sum(1 for k in ("deadline", "eligibility", "budget", "area") if c.get(k) and c.get(k) != "N/A")
+
 
 def dedupe(calls: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    """
-    Deduplicate by (title + agency). Prefer the record with more filled fields.
-    """
     seen: Dict[str, Dict[str, str]] = {}
     for c in calls:
-        key = norm_key(c.get("title", ""), c.get("funding_agency", ""))
-        if key not in seen:
-            seen[key] = c
-        else:
-            def score(x: Dict[str, str]) -> int:
-                return sum(1 for k in ("deadline", "eligibility", "budget", "area") if x.get(k) and x.get(k) != "N/A")
-            if score(c) > score(seen[key]):
-                seen[key] = c
-    return list(seen.values())
+        k = _key(c)
+        if k not in seen or _score(c) > _score(seen[k]):
+            seen[k] = c
 
-# -------------- optional AI fallback -------------- #
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-AI_ENABLED = False
-try:
-    if OPENAI_API_KEY:
-        import openai  # type: ignore
-        openai.api_key = OPENAI_API_KEY
-        AI_ENABLED = True
-except Exception:
-    AI_ENABLED = False
+    items = list(seen.values())
 
-def ai_enrich(text: str) -> Dict[str, str]:
-    if not AI_ENABLED or not text:
-        return {}
-    prompt = f"""
-Extract the following fields from the funding-call text.
-Return STRICT JSON with keys: deadline, eligibility, budget, area.
-- deadline must be YYYY-MM-DD if possible, else "N/A"
-- eligibility concise one-liner
-- budget a short amount or "N/A"
-- area: Medical Research / Biotechnology / Science & Technology / Physical Sciences / Chemical Sciences / Advanced Materials / Science & Innovation
+    def sortkey(x: Dict[str, str]) -> Tuple[int, str]:
+        d = x.get("deadline", "N/A")
+        if d == "N/A":
+            return (1, "9999-12-31")
+        return (0, d)
 
-Text:
-{text[:12000]}
-"""
-    try:
-        resp = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=300,
-        )
-        content = resp["choices"][0]["message"]["content"]
-        j = json.loads(content[content.find("{"): content.rfind("}")+1])
-        out = {}
-        for k in ("deadline", "eligibility", "budget", "area"):
-            v = str(j.get(k, "N/A")).strip()
-            out[k] = v if v else "N/A"
-        return out
-    except Exception:
-        return {}
+    items.sort(key=sortkey)
+    return items
+
+
+def save_data(calls: List[Dict[str, str]]) -> None:
+    out = {
+        "updated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "calls": calls,
+    }
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    print(f"[write] data.json -> {len(calls)} calls")
