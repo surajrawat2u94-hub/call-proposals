@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2025-09-04T03:39:35Z",
+  "updated_utc": "2025-09-05T03:42:47Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -191,13 +191,13 @@
       "website": "https://erc.europa.eu/apply-grant"
     },
     {
-      "title": "#ADVANCED GRANTS",
+      "title": "#STARTING GRANTS",
       "deadline": "N/A",
       "funding_agency": "European Research Council",
       "area": "N/A",
       "eligibility": "N/A",
       "budget": "N/A",
-      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A2027"
+      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A687"
     },
     {
       "title": "#RESEARCH FUNDING",
@@ -207,6 +207,15 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
+    },
+    {
+      "title": "#ADVANCED GRANTS",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A2027"
     },
     {
       "title": "Research funding",
