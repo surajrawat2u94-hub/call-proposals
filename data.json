@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2025-09-05T03:42:47Z",
+  "updated_utc": "2025-09-06T03:36:27Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -191,31 +191,13 @@
       "website": "https://erc.europa.eu/apply-grant"
     },
     {
-      "title": "#STARTING GRANTS",
+      "title": "Tags",
       "deadline": "N/A",
       "funding_agency": "European Research Council",
-      "area": "N/A",
+      "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "N/A",
+      "budget": "€761",
       "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A687"
-    },
-    {
-      "title": "#RESEARCH FUNDING",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
-    },
-    {
-      "title": "#ADVANCED GRANTS",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A2027"
     },
     {
       "title": "Research funding",
