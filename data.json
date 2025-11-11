@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2025-11-10T03:35:56Z",
+  "updated_utc": "2025-11-11T03:21:59Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -65,13 +65,13 @@
       "website": "https://dst.gov.in/schemes-programmes"
     },
     {
-      "title": "Department of Science & Technology",
+      "title": "Research, Development, and Innovation (RDI) Cell",
       "deadline": "N/A",
       "funding_agency": "DST (Department of Science & Technology)",
       "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://rdifund.anrf.gov.in/"
+      "budget": "₹1",
+      "website": "https://dst.gov.in/rdi-scheme/research-development-and-innovation-rdi-cell"
     },
     {
       "title": "S&T Capacity Building Programmes",
