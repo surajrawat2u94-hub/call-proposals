@@ -1,6 +1,15 @@
 {
-  "updated_utc": "2025-11-21T03:19:15Z",
+  "updated_utc": "2025-11-22T03:15:16Z",
   "calls": [
+    {
+      "title": "Archive Call for Proposals",
+      "deadline": "2025-03-15",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Advanced Materials",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/archive-call-for-proposals"
+    },
     {
       "title": "Synergy Grant",
       "deadline": "2025-05-04",
@@ -9,6 +18,15 @@
       "eligibility": "N/A",
       "budget": "€ 10",
       "website": "https://erc.europa.eu/apply-grant/synergy-grant"
+    },
+    {
+      "title": "International Cooperation Division",
+      "deadline": "2025-08-16",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://aistic.gov.in/ASEAN/ICDST"
     },
     {
       "title": "Starting Grant",
@@ -36,6 +54,87 @@
       "eligibility": "N/A",
       "budget": "€ 2.5",
       "website": "https://erc.europa.eu/apply-grant/advanced-grant"
+    },
+    {
+      "title": "Schemes/ Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/schemes-programmes"
+    },
+    {
+      "title": "Research, Development, and Innovation (RDI) Cell",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "₹1",
+      "website": "https://dst.gov.in/rdi-scheme/research-development-and-innovation-rdi-cell"
+    },
+    {
+      "title": "S&T Capacity Building Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/human-capacity-building-programmes"
+    },
+    {
+      "title": "Institutional Capacity Building Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/institutional-capacity-building-programmes"
+    },
+    {
+      "title": "Research & Development Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/research-development-programmes"
+    },
+    {
+      "title": "Innovation and Technology Development Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/innovation-and-technology-development-programmes"
+    },
+    {
+      "title": "Science for Society Programmes",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/science-society-programmes"
+    },
+    {
+      "title": "Call for Proposals",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/call-for-proposals"
+    },
+    {
+      "title": "India-Sweden Collaborative Industrial Research & Development Programme - Request for Proposal (RF...",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Advanced Materials",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals"
     },
     {
       "title": "Programmes",
