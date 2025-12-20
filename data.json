@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2025-12-19T03:41:29Z",
+  "updated_utc": "2025-12-20T03:32:56Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -54,6 +54,15 @@
       "eligibility": "N/A",
       "budget": "€ 2.5",
       "website": "https://erc.europa.eu/apply-grant/advanced-grant"
+    },
+    {
+      "title": "ERC Plus Grant",
+      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
+      "funding_agency": "European Research Council",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "€7",
+      "website": "https://erc.europa.eu/apply-grant/erc-plus-grant"
     },
     {
       "title": "Schemes/ Programmes",
@@ -137,31 +146,13 @@
       "website": "https://www.igstc.org/home/projects_call_text"
     },
     {
-      "title": "IGSTC Women Involvement in Science and Engineering Research (WISER) Call 2025 – Result IGSTC is p...",
+      "title": "IGSTC 2+2 Call 2025, 1st Stage Evaluation – Result IGSTC is pleased to announce the result of the...",
       "deadline": "N/A",
       "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
-      "area": "Medical Research",
+      "area": "N/A",
       "eligibility": "N/A",
       "budget": "N/A",
-      "website": "https://www.igstc.org/images/announcements/175255937320250715.pdf"
-    },
-    {
-      "title": "IGSTC Paired Early Career Fellowship in Applied Research (PECFAR) Call 2025 - Results IGSTC is pl...",
-      "deadline": "N/A",
-      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
-      "area": "Science & Technology",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://www.igstc.org/images/announcements/174955286620250610.pdf"
-    },
-    {
-      "title": "IGSTC INDUSTRIAL FELLOWSHIP CALL 2025 - RESULTS IGSTC is pleased to announce the results of IGSTC...",
-      "deadline": "N/A",
-      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
-      "area": "Biotechnology",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://www.igstc.org/images/announcements/174790215620250522.pdf"
+      "website": "https://www.igstc.org/images/announcements/176614896320251219.pdf"
     },
     {
       "title": "Apply for a grant",
