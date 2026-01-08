@@ -1,6 +1,15 @@
 {
-  "updated_utc": "2026-01-07T03:47:29Z",
+  "updated_utc": "2026-01-08T03:47:51Z",
   "calls": [
+    {
+      "title": "Resources",
+      "deadline": "2026-01-31",
+      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://www.igstc.org/home/vacancies"
+    },
     {
       "title": "Archive Call for Proposals",
       "deadline": "2026-03-15",
