@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-01-14T03:55:48Z",
+  "updated_utc": "2026-01-15T03:50:32Z",
   "calls": [
     {
       "title": "Resources",
@@ -182,6 +182,15 @@
       "website": "https://erc.europa.eu/apply-grant"
     },
     {
+      "title": "The ERC selects 349 mid-career researchers for €728 million in Consolidator Grants",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "€728",
+      "website": "https://erc.europa.eu/news-events/news/erc-2025-consolidator-grants-results"
+    },
+    {
       "title": "Tags",
       "deadline": "N/A",
       "funding_agency": "European Research Council",
@@ -189,6 +198,15 @@
       "eligibility": "N/A",
       "budget": "€728",
       "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
+    },
+    {
+      "title": "Consolidator Grants 2025: Examples of projects",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "€2",
+      "website": "https://erc.europa.eu/news-events/news/consolidator-grants-2025-examples-projects"
     },
     {
       "title": "Research funding",
