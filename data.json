@@ -1,15 +1,6 @@
 {
-  "updated_utc": "2026-02-01T04:38:01Z",
+  "updated_utc": "2026-02-02T04:33:22Z",
   "calls": [
-    {
-      "title": "Resources",
-      "deadline": "2026-01-31",
-      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
-      "area": "Science & Technology",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://www.igstc.org/home/vacancies"
-    },
     {
       "title": "Archive Call for Proposals",
       "deadline": "2026-03-15",
@@ -27,15 +18,6 @@
       "eligibility": "N/A",
       "budget": "€ 10",
       "website": "https://erc.europa.eu/apply-grant/synergy-grant"
-    },
-    {
-      "title": "International Cooperation Division",
-      "deadline": "2026-08-16",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://aistic.gov.in/ASEAN/ICDST"
     },
     {
       "title": "Starting Grant",
@@ -146,6 +128,15 @@
       "website": "https://dst.gov.in/call-for-proposals"
     },
     {
+      "title": "International Cooperation Calls/Announcements/Results",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://aistic.gov.in/ASEAN/ICDST"
+    },
+    {
       "title": "Call for proposal of India Science and Research Fellowship (ISRF) 2025-26",
       "deadline": "N/A",
       "funding_agency": "DST (Department of Science & Technology)",
@@ -153,24 +144,6 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://dst.gov.in/callforproposals/call-proposal-india-science-and-research-fellowship-isrf-2025-26"
-    },
-    {
-      "title": "Programmes",
-      "deadline": "N/A",
-      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
-      "area": "Advanced Materials",
-      "eligibility": "N/A",
-      "budget": "₹ 350",
-      "website": "https://www.igstc.org/home/projects_call_text"
-    },
-    {
-      "title": "IGSTC 2+2 Call 2025, 1st Stage Evaluation – Result IGSTC is pleased to announce the result of the...",
-      "deadline": "N/A",
-      "funding_agency": "IGSTC (Indo-German Science & Technology Centre)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://www.igstc.org/images/announcements/176614896320251219.pdf"
     },
     {
       "title": "Apply for a grant",
