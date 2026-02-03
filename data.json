@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-02-02T04:33:22Z",
+  "updated_utc": "2026-02-03T04:23:40Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -18,6 +18,15 @@
       "eligibility": "N/A",
       "budget": "€ 10",
       "website": "https://erc.europa.eu/apply-grant/synergy-grant"
+    },
+    {
+      "title": "International Cooperation Division",
+      "deadline": "2026-08-16",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://aistic.gov.in/ASEAN/ICDST"
     },
     {
       "title": "Starting Grant",
@@ -128,15 +137,6 @@
       "website": "https://dst.gov.in/call-for-proposals"
     },
     {
-      "title": "International Cooperation Calls/Announcements/Results",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://aistic.gov.in/ASEAN/ICDST"
-    },
-    {
       "title": "Call for proposal of India Science and Research Fellowship (ISRF) 2025-26",
       "deadline": "N/A",
       "funding_agency": "DST (Department of Science & Technology)",
@@ -155,13 +155,13 @@
       "website": "https://erc.europa.eu/apply-grant"
     },
     {
-      "title": "The ERC selects 349 mid-career researchers for €728 million in Consolidator Grants",
+      "title": "Proof of Concept Grants 2025: Examples of projects",
       "deadline": "N/A",
       "funding_agency": "European Research Council",
       "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "€728",
-      "website": "https://erc.europa.eu/news-events/news/erc-2025-consolidator-grants-results"
+      "budget": "€150",
+      "website": "https://erc.europa.eu/news-events/news/proof-concept-grants-2025-examples-projects"
     },
     {
       "title": "Tags",
@@ -169,17 +169,8 @@
       "funding_agency": "European Research Council",
       "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "€150",
+      "budget": "€10",
       "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
-    },
-    {
-      "title": "Consolidator Grants 2025: Examples of projects",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "€2",
-      "website": "https://erc.europa.eu/news-events/news/consolidator-grants-2025-examples-projects"
     },
     {
       "title": "Research funding",
