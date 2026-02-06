@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-02-05T04:23:31Z",
+  "updated_utc": "2026-02-06T04:23:32Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -50,7 +50,7 @@
       "title": "ERC Plus Grant",
       "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
       "funding_agency": "European Research Council",
-      "area": "Science & Technology",
+      "area": "Advanced Materials",
       "eligibility": "N/A",
       "budget": "€7",
       "website": "https://erc.europa.eu/apply-grant/erc-plus-grant"
@@ -169,7 +169,7 @@
       "funding_agency": "European Research Council",
       "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "€150",
+      "budget": "€2.37",
       "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
     },
     {
