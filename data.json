@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-02-10T04:39:08Z",
+  "updated_utc": "2026-02-11T04:38:29Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -18,15 +18,6 @@
       "eligibility": "N/A",
       "budget": "€ 10",
       "website": "https://erc.europa.eu/apply-grant/synergy-grant"
-    },
-    {
-      "title": "International Cooperation Division",
-      "deadline": "2026-08-16",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://aistic.gov.in/ASEAN/ICDST"
     },
     {
       "title": "Starting Grant",
@@ -137,6 +128,15 @@
       "website": "https://dst.gov.in/call-for-proposals"
     },
     {
+      "title": "International Cooperation Calls/Announcements/Results",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://aistic.gov.in/ASEAN/ICDST"
+    },
+    {
       "title": "Call for proposal of India Science and Research Fellowship (ISRF) 2025-26",
       "deadline": "N/A",
       "funding_agency": "DST (Department of Science & Technology)",
@@ -180,6 +180,105 @@
       "eligibility": "N/A",
       "budget": "€2.37",
       "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
+    },
+    {
+      "title": "Research funding",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£16",
+      "website": "https://wellcome.org/research-funding"
+    },
+    {
+      "title": "Find a funding opportunity",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/schemes"
+    },
+    {
+      "title": "Funding guidance",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/guidance"
+    },
+    {
+      "title": "Funding policies and grant conditions",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/guidance/policies-grant-conditions"
+    },
+    {
+      "title": "Funding portfolio: funded people and projects",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£16",
+      "website": "https://wellcome.org/research-funding/funding-portfolio"
+    },
+    {
+      "title": "Funded grants",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/funding-portfolio/funded-grants"
+    },
+    {
+      "title": "Login to Wellcome Funding",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://funding.wellcome.org"
+    },
+    {
+      "title": "Investments",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£39.9",
+      "website": "https://wellcome.org/about-us/investments"
+    },
+    {
+      "title": "Login Template Title",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://login-funding.wellcome.org/s/login/"
+    },
+    {
+      "title": "Our priorities",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£7.3",
+      "website": "https://wellcome.org/what-we-do"
+    },
+    {
+      "title": "Wellcome Funding",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://funding.wellcome.org"
     }
   ]
 }
