@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-02-18T04:30:16Z",
+  "updated_utc": "2026-02-19T04:28:28Z",
   "calls": [
     {
       "title": "India - Netherlands Hydrogen Fellowship Programme",
@@ -27,6 +27,15 @@
       "eligibility": "N/A",
       "budget": "€ 10",
       "website": "https://erc.europa.eu/apply-grant/synergy-grant"
+    },
+    {
+      "title": "International Cooperation Division",
+      "deadline": "2026-08-16",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://aistic.gov.in/ASEAN/ICDST"
     },
     {
       "title": "Starting Grant",
@@ -135,15 +144,6 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://dst.gov.in/call-for-proposals"
-    },
-    {
-      "title": "International Cooperation Calls/Announcements/Results",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://aistic.gov.in/ASEAN/ICDST"
     },
     {
       "title": "Call for proposal of India Science and Research Fellowship (ISRF) 2025-26",
