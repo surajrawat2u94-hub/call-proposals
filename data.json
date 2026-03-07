@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-03-06T04:18:13Z",
+  "updated_utc": "2026-03-07T04:08:17Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -9,6 +9,15 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://dst.gov.in/archive-call-for-proposals"
+    },
+    {
+      "title": "India - Netherlands Hydrogen Fellowship Programme",
+      "deadline": "2026-04-10",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals/india-netherlands-hydrogen-fellowship-programme"
     },
     {
       "title": "Synergy Grant",
