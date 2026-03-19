@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-03-18T04:32:47Z",
+  "updated_utc": "2026-03-19T04:31:33Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -17,7 +17,7 @@
       "area": "Science & Technology",
       "eligibility": "N/A",
       "budget": "N/A",
-      "website": "https://dst.gov.in/callforproposals/india-netherlands-hydrogen-fellowship-programme"
+      "website": "https://dst.gov.in/callforproposals-1"
     },
     {
       "title": "Synergy Grant",
@@ -27,15 +27,6 @@
       "eligibility": "N/A",
       "budget": "€ 10",
       "website": "https://erc.europa.eu/apply-grant/synergy-grant"
-    },
-    {
-      "title": "International Cooperation Division",
-      "deadline": "2026-08-16",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://aistic.gov.in/ASEAN/ICDST"
     },
     {
       "title": "Starting Grant",
@@ -146,6 +137,15 @@
       "website": "https://dst.gov.in/call-for-proposals"
     },
     {
+      "title": "International Cooperation Calls/Announcements/Results",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://aistic.gov.in/ASEAN/ICDST"
+    },
+    {
       "title": "India-France call for proposals in Applied Mathematics and Artificial Intelligence by DST and ANR",
       "deadline": "N/A",
       "funding_agency": "DST (Department of Science & Technology)",
@@ -153,6 +153,15 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://dst.gov.in/callforproposals/india-france-call-proposals-applied-mathematics-and-artificial-intelligence-dst-and"
+    },
+    {
+      "title": "Call for Proposals (CFP) under Scheduled Cast Sub Plan (SCSP) Mission सह-SANKALP",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals-0"
     },
     {
       "title": "Call for proposal of India Science and Research Fellowship (ISRF) 2025-26",
