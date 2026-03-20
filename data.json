@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-03-19T04:31:33Z",
+  "updated_utc": "2026-03-20T04:23:01Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -11,15 +11,6 @@
       "website": "https://dst.gov.in/archive-call-for-proposals"
     },
     {
-      "title": "India - Netherlands Hydrogen Fellowship Programme",
-      "deadline": "2026-04-10",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Science & Technology",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/callforproposals-1"
-    },
-    {
       "title": "Synergy Grant",
       "deadline": "2026-05-04",
       "funding_agency": "European Research Council",
@@ -27,6 +18,24 @@
       "eligibility": "N/A",
       "budget": "€ 10",
       "website": "https://erc.europa.eu/apply-grant/synergy-grant"
+    },
+    {
+      "title": "International Cooperation Division",
+      "deadline": "2026-08-16",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://aistic.gov.in/ASEAN/ICDST"
+    },
+    {
+      "title": "India - Netherlands Hydrogen Fellowship Programme",
+      "deadline": "23rd March 2026 (11:59 pm) DST Closing date: 10 th April 2026 (11:59 pm) Note: Applicants who have received conditional approval from University of Groningen are eligible to apply through the online mode ( https://onlinedst",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals/india-netherlands-hydrogen-fellowship-programme"
     },
     {
       "title": "Starting Grant",
@@ -137,15 +146,6 @@
       "website": "https://dst.gov.in/call-for-proposals"
     },
     {
-      "title": "International Cooperation Calls/Announcements/Results",
-      "deadline": "N/A",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://aistic.gov.in/ASEAN/ICDST"
-    },
-    {
       "title": "India-France call for proposals in Applied Mathematics and Artificial Intelligence by DST and ANR",
       "deadline": "N/A",
       "funding_agency": "DST (Department of Science & Technology)",
@@ -161,7 +161,7 @@
       "area": "Science & Technology",
       "eligibility": "N/A",
       "budget": "N/A",
-      "website": "https://dst.gov.in/callforproposals-0"
+      "website": "https://dst.gov.in/callforproposals/call-proposals-cfp-under-scheduled-cast-sub-plan-scsp-mission-%E0%A4%B8%E0%A4%B9-sankalp"
     },
     {
       "title": "Call for proposal of India Science and Research Fellowship (ISRF) 2025-26",
@@ -196,7 +196,7 @@
       "funding_agency": "European Research Council",
       "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "€2.37",
+      "budget": "N/A",
       "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
     },
     {
