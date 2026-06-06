@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-06-05T06:43:23Z",
+  "updated_utc": "2026-06-06T06:02:34Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -11,6 +11,15 @@
       "website": "https://dst.gov.in/archive-call-for-proposals"
     },
     {
+      "title": "Synergy Grant",
+      "deadline": "2026-05-04",
+      "funding_agency": "European Research Council",
+      "area": "Science & Innovation",
+      "eligibility": "N/A",
+      "budget": "€ 10",
+      "website": "https://erc.europa.eu/apply-grant/synergy-grant"
+    },
+    {
       "title": "International Cooperation Division",
       "deadline": "2026-08-16",
       "funding_agency": "DST (Department of Science & Technology)",
@@ -18,6 +27,42 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://aistic.gov.in/ASEAN/ICDST"
+    },
+    {
+      "title": "Starting Grant",
+      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
+      "funding_agency": "European Research Council",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "€1.5",
+      "website": "https://erc.europa.eu/apply-grant/starting-grant"
+    },
+    {
+      "title": "Consolidator Grant",
+      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
+      "funding_agency": "European Research Council",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "€2",
+      "website": "https://erc.europa.eu/apply-grant/consolidator-grant"
+    },
+    {
+      "title": "Advanced Grant",
+      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
+      "funding_agency": "European Research Council",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "€ 2.5",
+      "website": "https://erc.europa.eu/apply-grant/advanced-grant"
+    },
+    {
+      "title": "ERC Plus Grant",
+      "deadline": "The ERC will check whether your proposal meets the call’s eligibility criteria",
+      "funding_agency": "European Research Council",
+      "area": "Advanced Materials",
+      "eligibility": "N/A",
+      "budget": "€7",
+      "website": "https://erc.europa.eu/apply-grant/erc-plus-grant"
     },
     {
       "title": "Schemes/ Programmes",
@@ -108,6 +153,141 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://dst.gov.in/callforproposals/brics-sti-framework-programme-7th-coordinated-call-brics-multilateral-projects-2026"
+    },
+    {
+      "title": "Apply for a grant",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Science & Innovation",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://erc.europa.eu/apply-grant"
+    },
+    {
+      "title": "Tags",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "€2.37",
+      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
+    },
+    {
+      "title": "Applying for an ERC grant in the 2027 competitions: what you need to know",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://erc.europa.eu/news-events/news/applying-erc-grant-2027-competitions-what-you-need-know"
+    },
+    {
+      "title": "Proof of Concept Grants 2025: Examples of projects",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "€150",
+      "website": "https://erc.europa.eu/news-events/news/proof-concept-grants-2025-examples-projects"
+    },
+    {
+      "title": "Research funding",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£16",
+      "website": "https://wellcome.org/research-funding"
+    },
+    {
+      "title": "Find a funding opportunity",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/schemes"
+    },
+    {
+      "title": "Funding guidance",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/guidance"
+    },
+    {
+      "title": "Funding policies and grant conditions",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/guidance/policies-grant-conditions"
+    },
+    {
+      "title": "Our funding portfolio",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/funding-portfolio"
+    },
+    {
+      "title": "Funded grants",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/funding-portfolio/funded-grants"
+    },
+    {
+      "title": "Login to Wellcome Funding",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://funding.wellcome.org"
+    },
+    {
+      "title": "How we are funded",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/about-us/investments"
+    },
+    {
+      "title": "Login Template Title",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://login-funding.wellcome.org/s/login/"
+    },
+    {
+      "title": "About strategic programmes",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/what-we-do"
+    },
+    {
+      "title": "Wellcome Funding",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://funding.wellcome.org"
     }
   ]
 }
