@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-06-12T06:55:32Z",
+  "updated_utc": "2026-06-13T06:33:15Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -128,10 +128,10 @@
       "website": "https://dst.gov.in/science-society-programmes"
     },
     {
-      "title": "Call for Proposals",
+      "title": "Call For Proposals",
       "deadline": "N/A",
       "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Science & Technology",
+      "area": "N/A",
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://dst.gov.in/call-for-proposals"
@@ -227,12 +227,12 @@
       "website": "https://wellcome.org/research-funding/guidance/policies-grant-conditions"
     },
     {
-      "title": "Funding portfolio: funded people and projects",
+      "title": "Our funding portfolio",
       "deadline": "N/A",
       "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
+      "area": "N/A",
       "eligibility": "N/A",
-      "budget": "£16",
+      "budget": "N/A",
       "website": "https://wellcome.org/research-funding/funding-portfolio"
     },
     {
