@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-06-15T07:37:44Z",
+  "updated_utc": "2026-06-16T07:42:45Z",
   "calls": [
     {
       "title": "Archive Call for Proposals",
@@ -137,6 +137,15 @@
       "website": "https://dst.gov.in/call-for-proposals"
     },
     {
+      "title": "DST- JSPS call for proposal 2026 under the Indo-Japan Cooperative Science Programme (IJCSP)",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "Advanced Materials",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/callforproposals/dst-jsps-call-proposal-2026-under-indo-japan-cooperative-science-programme-ijcsp"
+    },
+    {
       "title": "India-Finland Joint Innovation Call 2026",
       "deadline": "N/A",
       "funding_agency": "DST (Department of Science & Technology)",
@@ -227,19 +236,19 @@
       "website": "https://wellcome.org/research-funding/guidance/policies-grant-conditions"
     },
     {
-      "title": "Our funding portfolio",
+      "title": "Funding portfolio: funded people and projects",
       "deadline": "N/A",
       "funding_agency": "Wellcome Trust (UK)",
-      "area": "N/A",
+      "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "N/A",
+      "budget": "£16",
       "website": "https://wellcome.org/research-funding/funding-portfolio"
     },
     {
       "title": "Funded grants",
       "deadline": "N/A",
       "funding_agency": "Wellcome Trust (UK)",
-      "area": "N/A",
+      "area": "Medical Research",
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://wellcome.org/research-funding/funding-portfolio/funded-grants"
@@ -254,12 +263,12 @@
       "website": "https://funding.wellcome.org"
     },
     {
-      "title": "How we are funded",
+      "title": "Investments",
       "deadline": "N/A",
       "funding_agency": "Wellcome Trust (UK)",
-      "area": "N/A",
+      "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "N/A",
+      "budget": "£39.9",
       "website": "https://wellcome.org/about-us/investments"
     },
     {
@@ -272,12 +281,12 @@
       "website": "https://login-funding.wellcome.org/s/login/"
     },
     {
-      "title": "About strategic programmes",
+      "title": "Our priorities",
       "deadline": "N/A",
       "funding_agency": "Wellcome Trust (UK)",
-      "area": "N/A",
+      "area": "Medical Research",
       "eligibility": "N/A",
-      "budget": "N/A",
+      "budget": "£7.3",
       "website": "https://wellcome.org/what-we-do"
     },
     {
