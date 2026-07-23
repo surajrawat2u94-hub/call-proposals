@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-07-22T05:31:14Z",
+  "updated_utc": "2026-07-23T05:36:29Z",
   "calls": [
     {
       "title": "TTl�cll4i11W-4 � � University Grants Commission (�11\\lT �, 1lTIB mcm) �· (Ministry of Education, ...",
@@ -380,13 +380,13 @@
       "website": "https://erc.europa.eu/apply-grant"
     },
     {
-      "title": "Tags",
+      "title": "New ERC Work Programme sets out 2027 funding opportunities",
       "deadline": "N/A",
       "funding_agency": "European Research Council",
-      "area": "Medical Research",
+      "area": "N/A",
       "eligibility": "N/A",
-      "budget": "€27.3",
-      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
+      "budget": "N/A",
+      "website": "https://erc.europa.eu/news-events/news/new-erc-work-programme-sets-out-2027-funding-opportunities"
     },
     {
       "title": "Applying for an ERC grant in the 2027 competitions: what you need to know",
@@ -405,6 +405,15 @@
       "eligibility": "N/A",
       "budget": "€150",
       "website": "https://erc.europa.eu/news-events/news/proof-concept-grants-2025-examples-projects"
+    },
+    {
+      "title": "Tags",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "€27.3",
+      "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
     },
     {
       "title": "Research funding",
