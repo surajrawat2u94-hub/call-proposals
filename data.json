@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-07T08:39:41Z",
+  "updated_utc": "2026-10-08T08:58:40Z",
   "calls": [
     {
       "title": "TTl�cll4i11W-4 � � University Grants Commission (�11\\lT �, 1lTIB mcm) �· (Ministry of Education, ...",
@@ -9,15 +9,6 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://www.ugc.gov.in/pdfnews/0831363_Public-Notice---Summer-Internship-in-USA.pdf"
-    },
-    {
-      "title": "Archive Call for Proposals",
-      "deadline": "2026-03-15",
-      "funding_agency": "DST (Department of Science & Technology)",
-      "area": "Advanced Materials",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://dst.gov.in/archive-call-for-proposals"
     },
     {
       "title": "Synergy Grant",
@@ -155,6 +146,15 @@
       "website": "https://dst.gov.in/call-for-proposals"
     },
     {
+      "title": "Archive Call For Proposals",
+      "deadline": "N/A",
+      "funding_agency": "DST (Department of Science & Technology)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://dst.gov.in/archive-call-for-proposals"
+    },
+    {
       "title": "Welcome to UGC, New Delhi, India",
       "deadline": "N/A",
       "funding_agency": "UGC (University Grants Commission)",
@@ -189,15 +189,6 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://www.ugc.gov.in/pdfnews/1154597_One-year-PG-Prog-ODL.pdf"
-    },
-    {
-      "title": "Result under Hungaricum Stipendium Programme for the year 2026-27 Dura tion_ Applican Application...",
-      "deadline": "N/A",
-      "funding_agency": "UGC (University Grants Commission)",
-      "area": "Science & Technology",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://www.ugc.gov.in/pdfnews/6824339_Result-of-Stipendium-Hungaricum-Scholarship-2026-27.pdf"
     },
     {
       "title": "UGC Circular regarding: Grant of Dearness Relief to Central Government pensioners/family pensione...",
@@ -389,6 +380,24 @@
       "website": "https://erc.europa.eu/apply-grant"
     },
     {
+      "title": "ERC grantee Peter Hegemann shares Nobel Prize in Medicine",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "€16",
+      "website": "https://erc.europa.eu/news-events/news/erc-grantee-peter-hegemann-shares-nobel-prize-medicine"
+    },
+    {
+      "title": "Five ERC grantees win 2026 Wolf Prizes",
+      "deadline": "N/A",
+      "funding_agency": "European Research Council",
+      "area": "Science & Technology",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://erc.europa.eu/news-events/news/five-erc-grantees-win-2026-wolf-prizes"
+    },
+    {
       "title": "ERC to introduce evaluation panel on the fundamentals of AI",
       "deadline": "N/A",
       "funding_agency": "European Research Council",
@@ -405,15 +414,6 @@
       "eligibility": "N/A",
       "budget": "€705",
       "website": "https://erc.europa.eu/tags?f%5B0%5D=tag%3A94"
-    },
-    {
-      "title": "New ERC Work Programme sets out 2027 funding opportunities",
-      "deadline": "N/A",
-      "funding_agency": "European Research Council",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://erc.europa.eu/news-events/news/new-erc-work-programme-sets-out-2027-funding-opportunities"
     },
     {
       "title": "Research funding",
