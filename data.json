@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-16T07:09:19Z",
+  "updated_utc": "2026-10-17T06:55:56Z",
   "calls": [
     {
       "title": "TTl�cll4i11W-4 � � University Grants Commission (�11\\lT �, 1lTIB mcm) �· (Ministry of Education, ...",
@@ -74,6 +74,15 @@
       "website": "https://www.ugc.ac.in/KeyInitiative?ID=UJRQmSQU4NUDsGgf837fMQ=="
     },
     {
+      "title": "UGC letter regarding Intervention on Non-Compliance with UGC Fee Refund Policy",
+      "deadline": "N/A",
+      "funding_agency": "UGC (University Grants Commission)",
+      "area": "N/A",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://www.ugc.gov.in/pdfnews/4373827_Letter-to-all-HEIs.pdf"
+    },
+    {
       "title": "UGC Public Notice regarding Invitation of applications from Eligible Higher Educational Instituti...",
       "deadline": "N/A",
       "funding_agency": "UGC (University Grants Commission)",
@@ -90,15 +99,6 @@
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://www.ugc.gov.in/pdfnews/2781359_NSP-Schemes.pdf"
-    },
-    {
-      "title": "UGC Circular regarding: One Year Postgraduate Programme under Open and Distance Learning (ODL) an...",
-      "deadline": "N/A",
-      "funding_agency": "UGC (University Grants Commission)",
-      "area": "N/A",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://www.ugc.gov.in/pdfnews/1154597_One-year-PG-Prog-ODL.pdf"
     },
     {
       "title": "UGC Circular regarding: Grant of Dearness Relief to Central Government pensioners/family pensione...",
@@ -302,7 +302,7 @@
       "title": "Five ERC grantees win 2026 Wolf Prizes",
       "deadline": "N/A",
       "funding_agency": "European Research Council",
-      "area": "Science & Technology",
+      "area": "Medical Research",
       "eligibility": "N/A",
       "budget": "N/A",
       "website": "https://erc.europa.eu/news-events/news/five-erc-grantees-win-2026-wolf-prizes"
