@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-11-24T12:27:17Z",
+  "updated_utc": "2026-11-25T11:15:53Z",
   "calls": [
     {
       "title": "TTl�cll4i11W-4 � � University Grants Commission (�11\\lT �, 1lTIB mcm) �· (Ministry of Education, ...",
@@ -63,6 +63,15 @@
       "eligibility": "N/A",
       "budget": "€7",
       "website": "https://erc.europa.eu/apply-grant/erc-plus-grant"
+    },
+    {
+      "title": "Find a funding opportunity",
+      "deadline": "Various dates Wellcome’s PhD Programmes for Health Professionals offer health professionals outstanding research training in supportive and inclusive research environments",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£400,000",
+      "website": "https://wellcome.org/research-funding/schemes"
     },
     {
       "title": "Malaviya Mission Teacher Training Programme (MMTTP)",
@@ -344,15 +353,6 @@
       "website": "https://wellcome.org/research-funding"
     },
     {
-      "title": "Find a funding opportunity",
-      "deadline": "N/A",
-      "funding_agency": "Wellcome Trust (UK)",
-      "area": "Medical Research",
-      "eligibility": "N/A",
-      "budget": "N/A",
-      "website": "https://wellcome.org/research-funding/schemes"
-    },
-    {
       "title": "Funding guidance",
       "deadline": "N/A",
       "funding_agency": "Wellcome Trust (UK)",
@@ -423,6 +423,33 @@
       "eligibility": "N/A",
       "budget": "£7.3",
       "website": "https://wellcome.org/what-we-do"
+    },
+    {
+      "title": "PhD Fellowships for Health Professionals",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/schemes/phd-fellowships-health-professionals"
+    },
+    {
+      "title": "Established researcher",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "N/A",
+      "website": "https://wellcome.org/research-funding/guidance/prepare-to-apply/established-researcher"
+    },
+    {
+      "title": "Starter Grants for Clinical Lecturers",
+      "deadline": "N/A",
+      "funding_agency": "Wellcome Trust (UK)",
+      "area": "Medical Research",
+      "eligibility": "N/A",
+      "budget": "£30,000",
+      "website": "https://wellcome.org/research-funding/schemes/starter-grants-clinical-lecturers"
     },
     {
       "title": "Wellcome Funding",
